@@ -1,0 +1,16 @@
+body {
+    background-color: #d9d4cb;
+    color: #2d2d2d;
+    text-align: center;
+    margin: 0;
+}
+
+img {
+    height: 30vw;
+    display: block;
+    margin: 0 auto;
+}
+
+hr {
+    color: #4364ac;
+}
