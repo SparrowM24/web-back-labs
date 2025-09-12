@@ -6,7 +6,7 @@ app = Flask(__name__)
 def not_found(err):
     return "нет такой страницы", 404
 
-@app.route("/web")
+@app.route("/lab1/web")
 def web():
     return '''<!DOCTYPE html>
         <html lang="en">
@@ -19,7 +19,7 @@ def web():
             "Content-Type": "text/plain; charset=utf-8"
         }
 
-@app.route("/author")
+@app.route("/lab1/author")
 def author():
     name = "Дьячкова Алиса Дмитриевна"
     group = "ФБИ-32"
@@ -35,7 +35,7 @@ def author():
             </body>
         </html>"""
 
-@app.route("/image")
+@app.route("/lab1/image")
 def image():
     path = url_for("static", filename="oak.jpg")
     style = url_for('static', filename="lab1.css")
@@ -52,7 +52,7 @@ def image():
 </html>
 '''
 count = 0
-@app.route("/counter")
+@app.route("/lab1/counter")
 def counter():
     global count
     count += 1
@@ -73,7 +73,7 @@ def counter():
     </body>
 </html>
 '''
-@app.route("/counter_cleaner")
+@app.route("/lab1/counter_cleaner")
 def counter_cleaner():
     global count
     count = 0
@@ -86,7 +86,7 @@ def counter_cleaner():
 </html>
 '''
 
-@app.route("/info")
+@app.route("/lab1/info")
 def info():
     return redirect("/author")
 
