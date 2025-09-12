@@ -14,3 +14,8 @@ img {
 hr {
     color: #4364ac;
 }
+
+footer, header {
+    color: #cec7b9;
+    background-color: #504b44;
+}
