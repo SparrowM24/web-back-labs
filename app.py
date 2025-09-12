@@ -69,6 +69,19 @@ def counter():
         Дата и время: ''' + str(time) + '''<br>
         Запрошеный адрес: ''' + url + '''<br>
         Ваш адрес: ''' + client_ip + '''<br>
+        <a href="/counter_cleaner">counter_cleaner</a>
+    </body>
+</html>
+'''
+@app.route("/counter_cleaner")
+def counter_cleaner():
+    global count
+    count = 0
+    return '''
+<!DOCTYPE html>
+<html>
+    <body>
+        <a href="/counter">counter</a>
     </body>
 </html>
 '''
