@@ -90,7 +90,7 @@ def author():
 def image():
     path = url_for("static", filename="oak.jpg")
     style = url_for('static', filename="lab1.css")
-    return '''
+    html_content = '''
 <!DOCTYPE html>
 <html>
     <head>
@@ -102,6 +102,12 @@ def image():
     </body>
 </html>
 '''
+    return html_content, 200, {
+        'Content-Language': 'ru',  # Язык контента - русский
+        'X-Custom-Header': 'MyCustomValue',  # Пользовательский заголовок 1
+        'X-Server-Info': 'Flask/2.3.3',  # Пользовательский заголовок 2
+        'Content-Type': 'text/html; charset=utf-8'  # Явно указываем тип контента
+    }
 count = 0
 @app.route("/lab1/counter")
 def counter():
