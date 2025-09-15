@@ -2,10 +2,21 @@ from flask import Flask, url_for, request, redirect
 import datetime
 app = Flask(__name__)
 
+log = []
 @app.errorhandler(404)
 def not_found(err):
+    global log
+    ip = request.remote_addr
+    time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    url = request.url
+    log.append(f"[Время:{time}, пользователь-{ip}] зашел на адрес: {url}")
     path = url_for("static", filename="404.gif")
     style = url_for('static', filename="lab1.css")
+
+    list_items = ""
+    for i in log:
+        list_items += f"<li>{i}</li>"
+    
     return '''
 <!DOCTYPE html>
 <html>
@@ -15,6 +26,12 @@ def not_found(err):
     <body>
         <h1>Страница пропала при загадочных обстоятельствах. Следствие ведётся...</h1>
         <img src="''' + path + '''">
+        <div style="width: 700px; margin: 0 auto;">
+            <h3>Журнал:</h3>
+            <ul>
+            ''' + list_items + '''
+            </ul>
+        </div>
     </body>
 </html>
 '''
@@ -129,6 +146,7 @@ def image():
         'X-Server-Info': 'Flask/2.3.3',  # Пользовательский заголовок 2
         'Content-Type': 'text/html; charset=utf-8'  # Явно указываем тип контента
     }
+
 count = 0
 @app.route("/lab1/counter")
 def counter():
