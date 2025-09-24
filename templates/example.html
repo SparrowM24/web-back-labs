@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Дьячкова Алиса. Лабораторная работа {{lab}}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css')}}">
 </head>
 <body>
     <header>
@@ -11,7 +12,10 @@
     </header>
 
     <main>
-        Основной текст
+        5 + 2 = {{5 + 2}}<br>
+        11 * 28 = {{11 * 28}}<br>
+        3258 - 759 = {{3258 - 759}}<br>
+        45<sup>8</sup> = {{45**8}}
     </main>
 
     <footer>
