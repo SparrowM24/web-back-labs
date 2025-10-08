@@ -1,67 +1,33 @@
 {% extends "base.html" %}
 
-{# номер лабораторной работы #}
 {% block lab %}Лабораторная работа 2{% endblock %}
 
-{# основной контент: #}
 {% block main %}
     <h1>Шаблоны и маршрутизация в Flask</h1>
     
-    <div class="description">
-        <p>Тема лабораторной работы - изучение шаблонов Jinja2, маршрутизации в Flask, 
-        работы с фильтрами и передачи данных между сервером и клиентом.</p>
-    </div>
+    <p>Изучаем шаблоны Jinja2 и маршрутизацию в Flask.</p>
 
-    <h2>Список созданных страниц:</h2>
+    <h2>Список страниц:</h2>
     
     <ol>
-        <li>
-            <a href="/lab2/example">Пример страницы с данными</a> - передача переменных в шаблон
-        </li>
-        <li>
-            <a href="/lab2/filters">Фильтры Jinja2</a> - демонстрация работы фильтров
-        </li>
-        <li>
-            <a href="/lab2/flowers">Список цветов</a> - работа с динамическими данными
-        </li>
-        <li>
-            <a href="/lab2/flowers/0">Пример цветка</a> - работа с параметрами URL
-        </li>
-        <li>
-            <a href="/lab2/add_flower/роза">Добавить цветок</a> - добавление данных через URL
-        </li>
-        <li>
-            <a href="/lab2/clear_flowers">Очистка списка</a> - управление данными
-        </li>
-        <li>
-            <a href="/lab2/calc/5/3">Калькулятор</a> - математические операции
-        </li>
-        <li>
-            <a href="/lab2/books">Каталог книг</a> - работа со сложными структурами данных
-        </li>
-        <li>
-            <a href="/lab2/berries">Каталог ягод</a> - изображения и циклы в шаблонах
-        </li>
+        <li><a href="/lab2/example">Пример страницы с данными</a></li>
+        <li><a href="/lab2/filters">Фильтры Jinja2</a></li>
+        <li><a href="/lab2/flowers">Список цветов</a></li>
+        <li><a href="/lab2/flowers/0">Цветок 0 (Роза)</a></li>
+        <li><a href="/lab2/flowers/1">Цветок 1 (Тюльпан)</a></li>
+        <li><a href="/lab2/calc/5/3">Калькулятор 5+3</a></li>
+        <li><a href="/lab2/books">Каталог книг</a></li>
+        <li><a href="/lab2/berries">Каталог ягод</a></li>
     </ol>
 
-    <h2>Дополнительные маршруты:</h2>
+    <h2>Другие ссылки:</h2>
     
     <ul>
-        <li><strong>Цветы:</strong> 
-            <a href="/lab2/add_flower/тюльпан">Тюльпан</a>, 
-            <a href="/lab2/add_flower/ромашка">Ромашка</a>
-        </li>
-        <li><strong>Калькулятор:</strong> 
-            <a href="/lab2/calc/">По умолчанию</a>, 
-            <a href="/lab2/calc/10">С одним числом</a>
-        </li>
-        <li><strong>Тестовые:</strong> 
-            <a href="/lab2/a">Без слэша</a>, 
-            <a href="/lab2/a/">Со слэшем</a>
-        </li>
-        <li><strong>Назад</strong> 
-            <a href="/">Стартовая страница</a>
-        </li>
+        <li><a href="/lab2/calc/">Калькулятор по умолчанию</a></li>
+        <li><a href="/lab2/calc/10">Калькулятор с числом 10</a></li>
+        <li><a href="/lab2/a">Тест без слеша</a></li>
+        <li><a href="/lab2/a/">Тест со слешем</a></li>
+        <li><a href="/">На главную</a></li>
     </ul>
 
 {% endblock %}
