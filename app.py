@@ -514,3 +514,110 @@ books = [
 @app.route('/lab2/books')
 def show_books():
     return render_template('books.html', books=books)
+
+berries = [
+    {
+        'name': 'Клубника',
+        'description': 'Сладкая и сочная красная ягода, богатая витамином C.',
+        'image': 'images/strawberry.jpg'
+    },
+    {
+        'name': 'Малина',
+        'description': 'Нежная ароматная ягода, часто используемая в десертах.',
+        'image': 'images/raspberry.jpg'
+    },
+    {
+        'name': 'Черника',
+        'description': 'Маленькая тёмная ягода, полезна для зрения.',
+        'image': 'images/blueberry.jpg'
+    },
+    {
+        'name': 'Ежевика',
+        'description': 'Близкая родственница малины с терпким вкусом.',
+        'image': 'images/blackberry.jpg'
+    },
+    {
+        'name': 'Голубика',
+        'description': 'Крупная синяя ягода, растущая на кустарниках.',
+        'image': 'images/bilberry.jpg'
+    },
+    {
+        'name': 'Смородина',
+        'description': 'Бывает красной, чёрной и белой, очень богата витаминами.',
+        'image': 'images/currant.jpg'
+    },
+    {
+        'name': 'Крыжовник',
+        'description': 'Зелёная или розовая ягода с освежающим вкусом.',
+        'image': 'images/gooseberry.jpg'
+    },
+    {
+        'name': 'Клюква',
+        'description': 'Кислая красная ягода, растущая на болотах.',
+        'image': 'images/cranberry.jpg'
+    },
+    {
+        'name': 'Брусника',
+        'description': 'Мелкая красная ягода с характерной горчинкой.',
+        'image': 'images/lingonberry.jpg'
+    },
+    {
+        'name': 'Облепиха',
+        'description': 'Оранжевые ягоды, густо облепляющие ветки.',
+        'image': 'images/sea_buckthorn.jpg'
+    },
+    {
+        'name': 'Шелковица',
+        'description': 'Сладкие ягоды белого, красного или чёрного цвета.',
+        'image': 'images/mulberry.jpg'
+    },
+    {
+        'name': 'Жимолость',
+        'description': 'Синие продолговатые ягоды, созревающие ранней весной.',
+        'image': 'images/honeysuckle.jpg'
+    },
+    {
+        'name': 'Ирга',
+        'description': 'Сине-чёрные сладкие ягоды, богатые антиоксидантами.',
+        'image': 'images/serviceberry.jpg'
+    },
+    {
+        'name': 'Арония',
+        'description': 'Чёрноплодная рябина с терпким вкусом.',
+        'image': 'images/chokeberry.jpg'
+    },
+    {
+        'name': 'Боярышник',
+        'description': 'Мелкие красные ягоды с мучнистой мякотью.',
+        'image': 'images/hawthorn.jpg'
+    },
+    {
+        'name': 'Калина',
+        'description': 'Ярко-красные ягоды с горьковатым вкусом.',
+        'image': 'images/viburnum.jpg'
+    },
+    {
+        'name': 'Рябина',
+        'description': 'Оранжево-красные ягоды, собранные в крупные гроздья.',
+        'image': 'images/rowan.jpg'
+    },
+    {
+        'name': 'Морошка',
+        'description': 'Желто-оранжевая ягода, растущая в северных регионах.',
+        'image': 'images/cloudberry.jpg'
+    },
+    {
+        'name': 'Черёмуха',
+        'description': 'Мелкие чёрные ягоды с вяжущим вкусом.',
+        'image': 'images/bird_cherry.jpg'
+    },
+    {
+        'name': 'Кизил',
+        'description': 'Красные продолговатые ягоды с кисло-сладким вкусом.',
+        'image': 'images/dogwood.jpg'
+    }
+]
+
+@app.route('/lab2/berries')
+def show_berries():
+    return render_template('berries.html', berries=berries)
