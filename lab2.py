@@ -1,5 +1,5 @@
 from flask import Blueprint, url_for, request, redirect, abort, render_template
-lab1 = Blueprint('lab2', __name__)
+lab2 = Blueprint('lab2', __name__)
 
 
 @lab2.route('/lab2/a')

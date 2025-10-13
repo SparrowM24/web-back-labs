@@ -247,7 +247,7 @@ def Eror_418():
 lab1.debug = False
 
 
-@app.route("/cause_error")
+@lab1.route("/cause_error")
 def cause_error():
     # Вызываем ошибку разными способами:
     

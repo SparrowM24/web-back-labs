@@ -2,10 +2,12 @@ from flask import Flask, url_for, request, redirect, abort, render_template
 import datetime
 from lab1 import lab1
 from lab2 import lab2
+from lab3 import lab3
 
 app = Flask(__name__)
 app.register_blueprint(lab1)
 app.register_blueprint(lab2)
+app.register_blueprint(lab3)
 
 
 log = []
@@ -57,7 +59,8 @@ def index():
             НГТУ, ФБ, WEB-программирование, часть 2. Список лабораторных
         </header>
         <a href="/lab1">Первая лабораторная</a> <br>
-        <a href="/lab2">Вторая лабораторная</a>
+        <a href="/lab2">Вторая лабораторная</a> <br>
+        <a href="/lab3">Третья лабораторная</a> <br>
         <footer>
             Дьячкова Алиса Дмитриевна ФБИ-32 3 Курс 2025
         </footer>
