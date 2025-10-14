@@ -4,9 +4,13 @@
 
 {% block main %}
     <h1>Формы, cookie</h1>
-    <h2>Список сделаных страниц:</h2>
+    <div>
+        Привет, <span style='color: {{name_color}}'>{{name}}</span>!
+    </div>
+    <div>Список сделаных страниц:</div>
     
     <ol>
         <li><a href="/lab3/cookie">Куки</a></li>
+        <li><a href="/lab3/del_cookie">Удалить куки</a></li>
     </ol>
 {% endblock %}
