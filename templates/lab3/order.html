@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 3{% endblock %}
+
+{% block main %}
+    <h1>Заказ напитка</h1>
+
+    <form action="/lab3/pay" style="max-width: 600px; margin: 0 auto;">
+        <div><strong>Напиток:</strong></div>
+        
+        <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+            <input type="radio" value="coffee" name="drink" checked>
+            Кофе <span style="color: #4364ac; font-weight: bold; float: right;">120 руб.</span>
+        </label>
+        
+        <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+            <input type="radio" value="black-tea" name="drink">
+            Чёрный чай <span style="color: #4364ac; font-weight: bold; float: right;">80 руб.</span>
+        </label>
+        
+        <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+            <input type="radio" value="green-tea" name="drink">
+            Зеленый чай <span style="color: #4364ac; font-weight: bold; float: right;">70 руб.</span>
+        </label>
+
+        <hr style="margin: 20px 0;">
+
+        <div><strong>Добавки:</strong></div>
+        
+        <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+            <input type="checkbox" name="milk">
+            Молоко <span style="color: #2d2d2d; float: right;">+30 руб.</span>
+        </label>
+        
+        <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+            <input type="checkbox" name="sugar">
+            Сахар <span style="color: #2d2d2d; float: right;">+10 руб.</span>
+        </label>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <button type="submit">Перейти к оплате</button>
+        </div>
+    </form>
+{% endblock %}

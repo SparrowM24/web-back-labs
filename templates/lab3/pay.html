@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 3{% endblock %}
+
+{% block main %}
+    <h1>Оплата заказа</h1>
+    
+    <div style="max-width: 500px; margin: 0 auto;">
+        <div style="background: white; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #4364ac;">
+            <h3 style="margin-top: 0; color: #4364ac;">Ваш заказ:</h3>
+            <p style="margin: 10px 0; padding: 0;">
+                {% if drink == 'coffee' %}Кофе{% endif %}
+                {% if drink == 'black-tea' %}Чёрный чай{% endif %}
+                {% if drink == 'green-tea' %}Зелёный чай{% endif %}
+                
+                {% if has_milk %}+ молоко{% endif %}
+                {% if has_sugar %}+ сахар{% endif %}
+            </p>
+        </div>
+
+        <div style="font-size: 1.5em; color: #4364ac; font-weight: bold; text-align: center; margin: 30px 0; padding: 15px; background: white; border-radius: 5px;">
+            Сумма к оплате: {{ price }} руб.
+        </div>
+
+        <form action="/lab3/success">
+            <input type="hidden" name="price" value="{{ price }}">
+            
+            <div><strong>Номер банковской карты:</strong></div>
+            <input type="text" name="card" pattern="\d{16}" placeholder="0000 0000 0000 0000" required 
+                   style="width: 100%; padding: 8px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 4px;">
+
+            <div><strong>Имя держателя карты:</strong></div>
+            <input type="text" name="name" placeholder="IVAN IVANOV" required
+                   style="width: 100%; padding: 8px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 4px;">
+
+            <div><strong>Номер CVV:</strong></div>
+            <input type="text" name="cvv" size="3" pattern="\d{3}" placeholder="123" required
+                   style="width: 60px; padding: 8px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 4px;">
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit">Оплатить {{ price }} руб.</button>
+                <a href="/lab3/order" style="color: #4364ac; text-decoration: none; margin-left: 15px;">
+                    Отказаться
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
