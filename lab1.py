@@ -76,8 +76,8 @@ def author():
 
 @lab1.route("/lab1/image")
 def image():
-    path = url_for("static", filename="oak.jpg")
-    style = url_for('static', filename="lab1.css")
+    path = url_for("static", filename="lab1/oak.jpg")
+    style = url_for('static', filename="lab1/lab1.css")
     html_content = '''
 <!DOCTYPE html>
 <html>
@@ -91,10 +91,10 @@ def image():
 </html>
 '''
     return html_content, 200, {
-        'Content-Language': 'ru',  # Язык контента - русский
-        'X-Custom-Header': 'MyCustomValue',  # Пользовательский заголовок 1
-        'X-Server-Info': 'Flask/2.3.3',  # Пользовательский заголовок 2
-        'Content-Type': 'text/html; charset=utf-8'  # Явно указываем тип контента
+        'Content-Language': 'ru',
+        'X-Custom-Header': 'MyCustomValue',
+        'X-Server-Info': 'Flask/2.3.3',
+        'Content-Type': 'text/html; charset=utf-8'
     }
 
 
@@ -153,8 +153,6 @@ def created():
 </html>
 ''', 201
 
-
-# Задание 15.6 Создайте страницы, которые возвращают коды 400, 401, 402, 403, 405 и 418.
 
 @lab1.route("/400")
 def Eror_400():
@@ -230,31 +228,21 @@ def Eror_418():
         <h1>418 - I'm a teapot</h1>
         <p>Я чайник и не могу заваривать кофе.</p>
         <p>
-        Ошибка 418 (HTTP 418, I’m a teapot) — шутливый код ответа, который появился в 
+        Ошибка 418 (HTTP 418, I'm a teapot) — шутливый код ответа, который появился в 
         спецификации HTTP 1 апреля 1998 года.Происхождение: документ RFC 2324 
         описывал протокол HTCPCP (Hyper Text Coffee Pot Control Protocol) для управления 
         кофеварками через HTTP. Поскольку дата публикации совпадала с 1 апреля, протокол 
         являлся первоапрельской шуткой. Суть: если сервер (в образе кофеварки) получает 
         запрос на приготовление кофе, но при этом является чайником, он должен вернуть 
         код ответа 418, означающий: «Я – чайник и не могу заварить кофе».
-        
         </p>
     </body>
     </html>
     ''', 418
 
-# Обработчик, который будет вызывать ошибку на сервере 
-lab1.debug = False
-
 
 @lab1.route("/cause_error")
 def cause_error():
-    # Вызываем ошибку разными способами:
-    
-    # 1. Деление на ноль
+    # Вызываем ошибку
     result = 10 / 0
-    
-    # 2. Конкатенация числа и строки
-    result = "текст" + 123
-    
     return "Эта строка никогда не будет показана"

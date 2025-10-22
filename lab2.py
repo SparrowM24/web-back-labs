@@ -14,7 +14,7 @@ def a2():
 
 @lab2.route('/lab2/example')
 def example():
-    name ="Дьячкова Алиса"
+    name = "Дьячкова Алиса"
     lab_num = 2
     group = 'ФБИ-32'
     course = 3
@@ -25,19 +25,20 @@ def example():
         {'name': 'мандарины', 'price': 95},
         {'name': 'манго', 'price': 321}
     ]
-    return render_template('example.html',
-                            name=name, lab_num=lab_num, group=group, course=course, fruits=fruits)
+    return render_template('lab2/example.html',
+                          name=name, lab_num=lab_num, group=group, course=course, fruits=fruits)
 
 
 @lab2.route('/lab2/')
 def lab_2():
-    return render_template('lab2.html')
+    return render_template('lab2/lab2.html')
 
 
 @lab2.route('/lab2/filters')
 def filters():
     phrase = "О <b>сколько</b> <u>нам</u> <i>открытий</i> чудных..."
-    return render_template('filter.html', phrase = phrase)
+    return render_template('lab2/filter.html', phrase=phrase)
+
 
 flower_list = [
     {'name': 'роза', 'price': 150},
@@ -65,7 +66,7 @@ def flowers(flower_id):
 </body>
 </html>
 '''
-    
+
 
 @lab2.route('/lab2/flowers')
 def show_all_flowers():
@@ -110,7 +111,7 @@ def add_flower():
     price = request.args.get('price', 100)
     if name:
         new_flower = {'name': name, 'price': int(price)}
-        flower_list.lab2end(new_flower)
+        flower_list.append(new_flower)  # Исправлено: было flower_list.lab2end
         return f'''
 <!DOCTYPE html>
 <html>
@@ -131,13 +132,13 @@ def add_flower():
 def delete_flower(flower_id):
     if 0 <= flower_id < len(flower_list):
         flower_list.pop(flower_id)
-    return redirect(url_for('show_all_flowers'))
+    return redirect(url_for('lab2.show_all_flowers'))  # Исправлено: добавлен blueprint
 
 
 @lab2.route('/lab2/clear_flowers', methods=['POST'])
 def clear_flowers():
     flower_list.clear()
-    return redirect(url_for('show_all_flowers'))
+    return redirect(url_for('lab2.show_all_flowers'))  # Исправлено: добавлен blueprint
 
 
 @lab2.route("/lab2/calc/<int:a>/<int:b>")
@@ -157,12 +158,12 @@ def calculator(a, b):
 
 @lab2.route('/lab2/calc/')
 def calc_default():
-    return redirect(url_for('calculator', a=1, b=1))
+    return redirect(url_for('lab2.calculator', a=1, b=1))  # Исправлено: добавлен blueprint
 
 
 @lab2.route('/lab2/calc/<int:a>')
 def calc_single(a):
-    return redirect(url_for('calculator', a=a, b=1))
+    return redirect(url_for('lab2.calculator', a=a, b=1))  # Исправлено: добавлен blueprint
 
 
 books = [
@@ -240,9 +241,10 @@ books = [
     }
 ]
 
+
 @lab2.route('/lab2/books')
 def show_books():
-    return render_template('books.html', books=books)
+    return render_template('lab2/books.html', books=books)
 
 
 berries = [
@@ -348,7 +350,7 @@ berries = [
     }
 ]
 
+
 @lab2.route('/lab2/berries')
 def show_berries():
-    return render_template('berries.html', berries=berries)
-
+    return render_template('lab2/berries.html', berries=berries)
