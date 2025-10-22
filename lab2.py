@@ -47,7 +47,6 @@ flower_list = [
     {'name': 'ромашка', 'price': 50}
 ]
 
-
 @lab2.route('/lab2/flowers/<int:flower_id>')
 def flowers(flower_id):
     if flower_id >= len(flower_list) or flower_id < 0:

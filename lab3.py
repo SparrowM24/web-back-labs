@@ -188,7 +188,6 @@ def ticket():
 
 
 # Доп задание
-# Список товаров
 products = [
     {'name': 'iPhone 15', 'price': 89990, 'brand': 'Apple', 'color': 'черный'},
     {'name': 'Samsung Galaxy S24', 'price': 79990, 'brand': 'Samsung', 'color': 'белый'},
