@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 3{% endblock %}
+
+{% block main %}
+    <h1>Железнодорожный билет</h1>
+
+    <div style="border: 2px solid #333; padding: 20px; max-width: 600px; margin: 0 auto;">
+        <h2 style="text-align: center; color: #4364ac;">ЖЕЛЕЗНОДОРОЖНЫЙ БИЛЕТ</h2>
+        
+        <div style="margin-bottom: 15px;">
+            <strong>Пассажир:</strong> {{ fio }}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <strong>Маршрут:</strong> {{ departure }} → {{ destination }}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <strong>Дата поездки:</strong> {{ date }}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <strong>Возраст:</strong> {{ age }} лет
+            {% if age < 18 %}
+                <span style="color: #dc3545; font-weight: bold;"> (Детский билет)</span>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <strong>Место:</strong> 
+            {% if shelf == 'lower' %}Нижняя полка
+            {% elif shelf == 'upper' %}Верхняя полка
+            {% elif shelf == 'upper_side' %}Верхняя боковая
+            {% elif shelf == 'lower_side' %}Нижняя боковая
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <strong>Дополнительные услуги:</strong>
+            <ul>
+                <li>Бельё: {{ 'Да' if linen else 'Нет' }}</li>
+                <li>Багаж: {{ 'Да' if baggage else 'Нет' }}</li>
+                <li>Страховка: {{ 'Да' if insurance else 'Нет' }}</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        {% set base_price = 700 if age < 18 else 1000 %}
+        {% set shelf_price = 100 if shelf in ['lower', 'lower_side'] else 0 %}
+        {% set linen_price = 75 if linen else 0 %}
+        {% set baggage_price = 250 if baggage else 0 %}
+        {% set insurance_price = 150 if insurance else 0 %}
+        {% set total_price = base_price + shelf_price + linen_price + baggage_price + insurance_price %}
+
+        <div style="text-align: center; font-size: 1.2em; font-weight: bold;">
+            <strong>ИТОГО К ОПЛАТЕ: {{ total_price }} руб.</strong>
+        </div>
+
+        <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
+            <div>Базовая стоимость: {{ base_price }} руб.</div>
+            {% if shelf_price > 0 %}
+                <div>Доплата за полку: {{ shelf_price }} руб.</div>
+            {% endif %}
+            {% if linen_price > 0 %}
+                <div>Бельё: {{ linen_price }} руб.</div>
+            {% endif %}
+            {% if baggage_price > 0 %}
+                <div>Багаж: {{ baggage_price }} руб.</div>
+            {% endif %}
+            {% if insurance_price > 0 %}
+                <div>Страховка: {{ insurance_price }} руб.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/lab3/ticket">Оформить новый билет</a>
+    </div>
+{% endblock %}

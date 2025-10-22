@@ -134,3 +134,55 @@ def reset_settings():
     resp.set_cookie('font_family', '', expires=0)
     return resp
 
+
+@lab3.route('/lab3/ticket')
+def ticket():
+    errors = {}
+    ticket_data = {}
+    if request.args:
+        fio = request.args.get('fio')
+        shelf = request.args.get('shelf')
+        linen = request.args.get('linen')
+        baggage = request.args.get('baggage')
+        age = request.args.get('age')
+        departure = request.args.get('departure')
+        destination = request.args.get('destination')
+        date = request.args.get('date')
+        insurance = request.args.get('insurance')
+        if not fio:
+            errors['fio'] = 'Заполните ФИО пассажира'
+        if not shelf:
+            errors['shelf'] = 'Выберите полку'
+        if not linen:
+            errors['linen'] = 'Укажите наличие белья'
+        if not baggage:
+            errors['baggage'] = 'Укажите наличие багажа'
+        if not age:
+            errors['age'] = 'Заполните возраст'
+        elif not age.isdigit() or not (1 <= int(age) <= 120):
+            errors['age'] = 'Возраст должен быть от 1 до 120 лет'
+        if not departure:
+            errors['departure'] = 'Заполните пункт выезда'
+        if not destination:
+            errors['destination'] = 'Заполните пункт назначения'
+        if not date:
+            errors['date'] = 'Выберите дату поездки'
+        if not insurance:
+            errors['insurance'] = 'Укажите наличие страховки'
+        if not errors:
+            ticket_data = {
+                'fio': fio,
+                'shelf': shelf,
+                'linen': linen == 'yes',
+                'baggage': baggage == 'yes',
+                'age': int(age),
+                'departure': departure,
+                'destination': destination,
+                'date': date,
+                'insurance': insurance == 'yes'
+            }
+            return render_template('lab3/ticket_result.html', **ticket_data)
+
+    return render_template('lab3/ticket_form.html', errors=errors)
+
+
