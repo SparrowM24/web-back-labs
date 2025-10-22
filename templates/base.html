@@ -57,11 +57,7 @@
         
         {% if request.cookies.get('color') or request.cookies.get('bg_color') or request.cookies.get('font_size') or request.cookies.get('font_family') %}
         <div style="margin-top: 20px;">
-            <a href="/lab3/reset-settings" style="
-                {% if request.cookies.get('color') %}
-                color: {{ request.cookies.get('color') }};
-                {% endif %}
-            ">
+            <a href="/lab3/clear_settings">
                 <button type="button">Сбросить стили</button>
             </a>
         </div>
