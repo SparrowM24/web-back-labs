@@ -3,10 +3,16 @@ lab3 = Blueprint('lab3', __name__)
 
 
 @lab3.route('/lab3/')
-def lab():
-    name = request.cookies.get('name')
-    name_color = request.cookies.get('name_color')
-    return render_template('lab3/lab3.html', name=name, name_color=name_color)
+def lab3_index():
+    # Получаем данные из формы form1 через куки
+    name = request.cookies.get('user_name', 'Аноним')
+    age = request.cookies.get('user_age', 'неизвестно')
+    sex = request.cookies.get('user_sex', 'не указан')
+    
+    return render_template('lab3/lab3.html', 
+                         name=name, 
+                         age=age, 
+                         sex=sex)
 
 
 @lab3.route('/lab3/cookie')
@@ -31,6 +37,7 @@ def form1():
     errors = {}
     user = request.args.get('user', '')
     age = request.args.get('age', '')
+    sex = request.args.get('sex', '')
     
     if request.args:
         if not user:  
@@ -38,7 +45,14 @@ def form1():
         
         if not age:
             errors['age'] = 'Заполните поле!'
-    sex = request.args.get('sex')
+        
+        if user and age:
+            resp = make_response(render_template('lab3/form1.html', user=user, age=age, sex=sex, errors=errors))
+            resp.set_cookie('user_name', user)
+            resp.set_cookie('user_age', age)
+            resp.set_cookie('user_sex', sex)
+            return resp
+    
     return render_template('lab3/form1.html', user=user, age=age, sex=sex, errors=errors)
 
 
@@ -119,3 +133,4 @@ def reset_settings():
     resp.set_cookie('font_size', '', expires=0)
     resp.set_cookie('font_family', '', expires=0)
     return resp
+

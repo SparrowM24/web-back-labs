@@ -55,7 +55,6 @@
     <main>
         {% block main %}{% endblock %}
         
-        <!-- Кнопка сброса стилей -->
         {% if request.cookies.get('color') or request.cookies.get('bg_color') or request.cookies.get('font_size') or request.cookies.get('font_family') %}
         <div style="margin-top: 20px;">
             <a href="/lab3/reset-settings" style="
