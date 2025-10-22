@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 3{% endblock %}
+
+{% block main %}
+    <h1>Поиск смартфонов</h1>
+
+    <form method="get">
+        <div>
+            <label for="min_price">Минимальная цена:</label>
+            <input type="number" id="min_price" name="min_price" 
+                   placeholder="{{ min_possible_price }}" 
+                   value="{{ min_price or '' }}">
+        </div>
+        
+        <div>
+            <label for="max_price">Максимальная цена:</label>
+            <input type="number" id="max_price" name="max_price" 
+                   placeholder="{{ max_possible_price }}" 
+                   value="{{ max_price or '' }}">
+        </div>
+        
+        <div>
+            <button type="submit" name="search">Искать</button>
+            <button type="submit" name="reset">Сброс</button>
+        </div>
+    </form>
+
+    <div style="margin-top: 20px;">
+        <h2>Найдено товаров: {{ total_found }}</h2>
+        
+        {% if total_found == 0 %}
+            <p>Не найдено ни одного товара</p>
+        {% else %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                {% for product in products %}
+                <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                    <h3>{{ product.name }}</h3>
+                    <p><strong>Цена:</strong> {{ product.price }} руб.</p>
+                    <p><strong>Бренд:</strong> {{ product.brand }}</p>
+                    <p><strong>Цвет:</strong> {{ product.color }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

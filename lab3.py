@@ -187,3 +187,68 @@ def ticket():
     return render_template('lab3/ticket_form.html', errors=errors)
 
 
+# Доп задание
+# Список товаров
+products = [
+    {'name': 'iPhone 15', 'price': 89990, 'brand': 'Apple', 'color': 'черный'},
+    {'name': 'Samsung Galaxy S24', 'price': 79990, 'brand': 'Samsung', 'color': 'белый'},
+    {'name': 'Xiaomi Redmi Note 13', 'price': 24990, 'brand': 'Xiaomi', 'color': 'синий'},
+    {'name': 'Google Pixel 8', 'price': 69990, 'brand': 'Google', 'color': 'серый'},
+    {'name': 'OnePlus 11', 'price': 54990, 'brand': 'OnePlus', 'color': 'зеленый'},
+    {'name': 'Realme GT 3', 'price': 42990, 'brand': 'Realme', 'color': 'желтый'},
+    {'name': 'HONOR Magic5', 'price': 59990, 'brand': 'HONOR', 'color': 'фиолетовый'},
+    {'name': 'OPPO Find X6', 'price': 74990, 'brand': 'OPPO', 'color': 'черный'},
+    {'name': 'Vivo X100', 'price': 67990, 'brand': 'Vivo', 'color': 'синий'},
+    {'name': 'Nokia G42', 'price': 18990, 'brand': 'Nokia', 'color': 'серый'},
+    {'name': 'Motorola Edge 40', 'price': 39990, 'brand': 'Motorola', 'color': 'зеленый'},
+    {'name': 'Sony Xperia 5', 'price': 89990, 'brand': 'Sony', 'color': 'черный'},
+    {'name': 'ASUS Zenfone 10', 'price': 59990, 'brand': 'ASUS', 'color': 'белый'},
+    {'name': 'Nothing Phone 2', 'price': 45990, 'brand': 'Nothing', 'color': 'белый'},
+    {'name': 'Huawei P60', 'price': 79990, 'brand': 'Huawei', 'color': 'золотой'},
+    {'name': 'ZTE Nubia Z50', 'price': 34990, 'brand': 'ZTE', 'color': 'красный'},
+    {'name': 'Tecno Phantom V', 'price': 29990, 'brand': 'Tecno', 'color': 'синий'},
+    {'name': 'Infinix Zero 30', 'price': 22990, 'brand': 'Infinix', 'color': 'оранжевый'},
+    {'name': 'Poco X6 Pro', 'price': 32990, 'brand': 'Poco', 'color': 'желтый'},
+    {'name': 'iPhone 14', 'price': 69990, 'brand': 'Apple', 'color': 'красный'}
+]
+
+@lab3.route('/lab3/products')
+def products_search():
+    min_price_cookie = request.cookies.get('min_price')
+    max_price_cookie = request.cookies.get('max_price')
+    
+    min_price = request.args.get('min_price', min_price_cookie)
+    max_price = request.args.get('max_price', max_price_cookie)
+
+    if 'reset' in request.args:
+        min_price = None
+        max_price = None
+    min_price = int(min_price) if min_price and min_price.isdigit() else None
+    max_price = int(max_price) if max_price and max_price.isdigit() else None
+    if min_price and max_price and min_price > max_price:
+        min_price, max_price = max_price, min_price
+    filtered_products = products
+    if min_price is not None or max_price is not None:
+        filtered_products = []
+        for product in products:
+            price = product['price']
+            if (min_price is None or price >= min_price) and (max_price is None or price <= max_price):
+                filtered_products.append(product)
+    resp = make_response(render_template(
+        'lab3/products.html',
+        products=filtered_products,
+        min_price=min_price,
+        max_price=max_price,
+        total_found=len(filtered_products),
+        min_possible_price=min(p['price'] for p in products),
+        max_possible_price=max(p['price'] for p in products)
+    ))
+    if min_price is not None:
+        resp.set_cookie('min_price', str(min_price))
+    if max_price is not None:
+        resp.set_cookie('max_price', str(max_price))
+    if 'reset' in request.args:
+        resp.set_cookie('min_price', '', expires=0)
+        resp.set_cookie('max_price', '', expires=0)
+    
+    return resp
