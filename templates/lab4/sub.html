@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block lab %}Вычитание чисел{% endblock %}
+
+{% block main %}
+        {% if error %}
+            {{ error }}
+        {% else %}
+        <hi>Вычитание чисел</hi>
+        {{x1}} - {{x2}} = {{ result }}
+        {% endif %}
+{% endblock %}
