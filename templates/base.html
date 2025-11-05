@@ -62,6 +62,16 @@
             </a>
         </div>
         {% endif %}
+        <button class="back-button" onclick="window.history.back()">← Назад</button>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const backButton = document.querySelector('.back-button');
+                if (window.location.pathname === '/' || window.history.length <= 1) {
+                    backButton.style.display = 'none';
+                }
+            });
+        </script>
     </main>
 
     <footer>
