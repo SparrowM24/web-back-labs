@@ -133,7 +133,50 @@ def login():
     error = "Неверные логин и/или пароль"
     return render_template('lab4/login.html', error=error, authorized=False, login=login_input)
 
+
 @lab4.route('/lab4/logout', methods=['POST'])
 def logout():
     session.pop('login', None)
     return redirect('/lab4/login')
+
+
+@lab4.route('/lab4/fridge', methods=['GET', 'POST'])
+def fridge():
+    if request.method == 'GET':
+        return render_template('lab4/fridge.html')
+    
+    temperature = request.form.get('temperature')
+    
+    if not temperature:
+        return render_template('lab4/fridge.html', 
+                             error="Ошибка: не задана температура")
+    try:
+        temp = int(temperature)
+    except ValueError:
+        return render_template('lab4/fridge.html', 
+                             error="Ошибка: температура должна быть числом")
+    if temp < -12:
+        return render_template('lab4/fridge.html', 
+                             error="Не удалось установить температуру — слишком низкое значение",
+                             temperature=temperature)
+    elif temp > -1:
+        return render_template('lab4/fridge.html', 
+                             error="Не удалось установить температуру — слишком высокое значение",
+                             temperature=temperature)
+    elif -12 <= temp <= -9:
+        snowflakes = 3
+        message = f"Установлена температура: {temp}°C"
+    elif -8 <= temp <= -5:
+        snowflakes = 2
+        message = f"Установлена температура: {temp}°C"
+    elif -4 <= temp <= -1:
+        snowflakes = 1
+        message = f"Установлена температура: {temp}°C"
+    else:
+        snowflakes = 0
+        message = f"Установлена температура: {temp}°C"
+    
+    return render_template('lab4/fridge.html', 
+                         message=message, 
+                         snowflakes=snowflakes,
+                         temperature=temperature)

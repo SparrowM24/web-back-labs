@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 4{% endblock %}
+
+{% block main %}
+    <h1>Холодильник</h1>
+    
+    <div style="max-width: 500px; margin: 0 auto; padding: 20px; border: 2px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="text-align: center; color: #333;">Установка температуры</h2>
+        
+        <form method="post" style="margin-bottom: 20px;">
+            <div style="margin-bottom: 15px;">
+                <label for="temperature" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Температура (°C):
+                </label>
+                <input type="number" id="temperature" name="temperature" 
+                       value="{{ temperature if temperature else '' }}"
+                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                       placeholder="Введите температуру от -12 до -1">
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Установить температуру
+            </button>
+        </form>
+
+        {% if error %}
+            <div style="color: #d32f2f; background-color: #ffebee; padding: 10px; border: 1px solid #f44336; border-radius: 4px; margin-bottom: 15px;">
+                <strong>Ошибка:</strong> {{ error }}
+            </div>
+        {% endif %}
+
+        {% if message %}
+            <div style="color: #2e7d32; background-color: #e8f5e9; padding: 15px; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">{{ message }}</div>
+                
+                {% if snowflakes > 0 %}
+                    <div style="font-size: 24px; color: #1976d2;">
+                        {% for i in range(snowflakes) %}
+                            ❄️
+                        {% endfor %}
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Уровень охлаждения: 
+                        {% if snowflakes == 3 %}Максимальный{% endif %}
+                        {% if snowflakes == 2 %}Средний{% endif %}
+                        {% if snowflakes == 1 %}Минимальный{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 4px;">
+            <h3 style="margin-top: 0; color: #1565c0;">Диапазоны температур:</h3>
+            <ul style="margin-bottom: 0;">
+                <li><strong>-12°C — -9°C:</strong> ❄️❄️❄️ (Максимальное охлаждение)</li>
+                <li><strong>-8°C — -5°C:</strong> ❄️❄️ (Среднее охлаждение)</li>
+                <li><strong>-4°C — -1°C:</strong> ❄️ (Минимальное охлаждение)</li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
