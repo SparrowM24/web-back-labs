@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 4{% endblock %}
+
+{% block main %}
+    <h1>Регистрация</h1>
+    
+    <div style="max-width: 500px; margin: 0 auto; padding: 20px; border: 2px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="text-align: center; color: #333;">Создание аккаунта</h2>
+        
+        <form method="post">
+            <div style="margin-bottom: 15px;">
+                <label for="login">Логин:</label>
+                <input type="text" id="login" name="login" value="{{ login if login else '' }}"
+                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                       required>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="name">Имя:</label>
+                <input type="text" id="name" name="name" value="{{ name if name else '' }}"
+                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                       required>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="gender">Пол:</label>
+                <select id="gender" name="gender" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="male" {{ 'selected' if gender == 'male' else '' }}>Мужской</option>
+                    <option value="female" {{ 'selected' if gender == 'female' else '' }}>Женский</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password"
+                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                       required>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="password_confirm">Подтверждение пароля:</label>
+                <input type="password" id="password_confirm" name="password_confirm"
+                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                       required>
+            </div>
+            
+            {% if error %}
+                <div style="color: red; font-weight: bold; font-style: italic; margin: 10px 0; padding: 5px; background-color: #ffe6e6; border: 1px solid red; border-radius: 3px;">
+                    {{ error }}
+                </div>
+            {% endif %}
+            
+            <div>
+                <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Зарегистрироваться
+                </button>
+                <a href="/lab4/login" style="padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">
+                    Назад к входу
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

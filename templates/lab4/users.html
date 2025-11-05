@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 4{% endblock %}
+
+{% block main %}
+    <h1>Список пользователей</h1>
+    
+    <div style="max-width: 800px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">Всего пользователей: {{ users|length }}</h2>
+            <div>
+                <a href="/lab4/edit_user" style="padding: 10px 15px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 4px; margin-right: 10px;">
+                    ✏️ Редактировать мои данные
+                </a>
+                <form action="/lab4/delete_user" method="post" style="display: inline;">
+                    <button type="submit" style="padding: 10px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🗑️ Удалить мой аккаунт
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f5f5f5;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Имя</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Логин</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Пол</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr style="{{ 'background-color: #e8f5e8;' if user.login == current_user else '' }}">
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ user.name }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ user.login }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                            {% if user.gender == 'male' %}👨 Мужской{% else %}👩 Женский{% endif %}
+                        </td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                            {% if user.login == current_user %}
+                                <strong style="color: #4CAF50;">✅ Это вы</strong>
+                            {% else %}
+                                👤 Пользователь
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/lab4/login" style="padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                ← Назад
+            </a>
+        </div>
+    </div>
+{% endblock %}
