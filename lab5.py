@@ -64,6 +64,38 @@ def register():
     return render_template('lab5/success.html', login=login)
 
 
+@lab5.route('/lab5/login', methods=['GET','POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('lab5/login.html')
+    
+    login = request.form.get('login')
+    password = request.form.get('password')
+
+    if not login or not password:
+        return render_template('lab5/login.html', error='Заполните поля')
+    
+    conn, cur = db_connect()
+
+    if current_app.config['DB_TYPE'] == 'postgres':
+        cur.execute(f"SELECT * FROM users WHERE login=%s;",(login, ))
+    else:
+        cur.execute(f"SELECT * FROM users WHERE login=?;",(login, ))
+    
+    user = cur.fetchone()
+
+    if not user:
+        db_close(conn, cur)
+        return render_template('/lab5/login.html', error='Логин и/или пароль неверны')
+    if not check_password_hash(user['password'], password):
+        db_close(conn, cur)
+        return render_template('lab5/login.html', error='Логин и/или пароль неверны')
+    
+    session['login'] = login
+    db_close(conn, cur)
+    return render_template('lab5/success_login.html', login=login)
+
+
 @lab5.route('/lab5/list')
 def list_articles():
     return "Список статей"

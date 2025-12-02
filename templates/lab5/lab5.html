@@ -5,8 +5,12 @@
 {% block main %}
     <h1>Система управления статьями</h1>
     
-    <div class="user-info">
-        Пользователь: <strong>anonymous</strong>
+    <div class="user">
+        {% if login %}
+            Пользователь: {{ login  }}
+        {% else %}
+            Anonymous
+        {% endif %}
     </div>
 
     <h2>Основные разделы:</h2>
