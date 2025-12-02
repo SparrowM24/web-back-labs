@@ -1,5 +1,6 @@
 from flask import Flask, url_for, request, redirect, abort, render_template
 import datetime
+import os
 from lab1 import lab1
 from lab2 import lab2
 from lab3 import lab3
@@ -7,25 +8,8 @@ from lab4 import lab4
 from lab5 import lab5
 
 app = Flask(__name__)
-# В основном файле приложения
-app.config['DB_TYPE'] = 'sqlite'
-
-# Создайте файл database.db и таблицу users
-import sqlite3
-conn = sqlite3.connect('database.db')
-cur = conn.cursor()
-cur.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        login TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        full_name TEXT NOT NULL
-    )
-''')
-conn.commit()
-conn.close()
-
-app.secret_key = "секретно-секретный секрет"
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'секретно секретный-секрет')
+app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'postgres')
 
 app.register_blueprint(lab1)
 app.register_blueprint(lab2)

@@ -28,6 +28,7 @@ def db_connect():
         cur = conn.cursor()
 
     return conn, cur
+    
 
 def db_close(conn, cur):
     conn.commit()
