@@ -9,6 +9,7 @@ lab5 = Blueprint('lab5', __name__)
 
 @lab5.route('/lab5/')
 def main():
+    login = session.get('login')  # Получаем логин из сессии
     return render_template('/lab5/lab5.html', login=login)
 
 def db_connect():
