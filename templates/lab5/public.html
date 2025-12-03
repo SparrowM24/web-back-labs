@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block lab %}Лабораторная работа 5{% endblock %}
+
+{% block main %}
+    <h1>Публичные статьи</h1>
+
+    {% if error %}
+        <p style="text-align:center; color:red;">{{ error }}</p>
+    {% else %}
+        {% for article in articles %}
+            <div class="article">
+                <h2>{{ article['title'] }}</h2>
+                <p>{{ article['article_text'] }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <a href="/lab5" class="back">На главную</a>
+{% endblock %}

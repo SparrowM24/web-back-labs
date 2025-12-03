@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block lab %}Лабораторная работа 5{% endblock %}
+
+{% block main %}
+    <h1 style="text-align:center;">Изменить имя и пароль</h1>
+
+    <form action="/lab5/update" method="post">
+        <div>
+            Новое имя:<br>
+            <input type="text" name="name">
+        </div>
+
+        <div>
+            Новый пароль:<br>
+            <input type="password" name="password" placeholder="Оставьте пустым, если не менять">
+        </div>
+
+        <div>
+            Подтвердите пароль:<br>
+            <input type="password" name="confirm">
+        </div>
+
+        {% if error %}
+            <p style="color:red; text-align:center;">{{ error }}</p>
+        {% endif %}
+
+        <button type="submit">Сохранить</button>
+        <a href="/lab5/" class="cancel">Отмена</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block lab %}Лабораторная работа 5{% endblock %}
+
+{% block main %}
+    <h1 style="text-align:center;">Редактирование статьи</h1>
+
+    <form method="post">
+        <label>
+            <div>Название статьи:</div>
+            <input type="text" maxlength="50" name="title" value="{{ article.title }}">
+        </label>
+
+        <label>
+            <div>Текст статьи:</div>
+            <textarea name="article_text" rows="7">{{ article.article_text }}</textarea>
+        </label>
+
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <div style="text-align:center; margin-top:20px;">
+        <a href="/lab5/list">Назад к списку</a>
+    </div>
+{% endblock %}
