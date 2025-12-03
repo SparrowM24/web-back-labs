@@ -102,6 +102,26 @@ function booking(officeNumber) {
     });
 }
 
+
+
+function updateTotalCost(total) {
+    let totalDiv = document.getElementById('total-cost');
+    if (!totalDiv) {
+        totalDiv = document.createElement('div');
+        totalDiv.id = 'total-cost';
+        document.querySelector('main').appendChild(totalDiv);
+    }
+    
+    if (total > 0) {
+        totalDiv.innerHTML = `<h3>Общая стоимость ваших офисов: ${total} руб./день</h3>`;
+    } else {
+        totalDiv.innerHTML = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    getOfficeList();
+})
 </script>
 {% endblock %}
 
