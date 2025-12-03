@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block lab %}Лабораторная работа 5{% endblock %}
+
+{% block main %}
+    <h1>Статьи</h1>
+    <div>
+        <a href="{{ url_for('lab5.public_articles') }}">Перейти к публичным статьям</a>
+    </div>
+
+    {% if not articles %}
+        <p>Пока нет статей.</p>
+    {% endif %}
+
+    {% for article in articles %}
+        <div class="article">
+            {% if article['is_favorite'] %}
+                <span style="font-weight: bold;">☆ Избранная</span>
+            {% endif %}
+            {% if article['is_public'] %}
+                <span style="color: rgb(17, 174, 0);"><i>Публичная</i></span>
+            {% else %}
+                <span style="color: rgb(5, 11, 99);"><i>Личная</i></span>
+            {% endif %}
+            <h2>{{ article['title'] }}</h2>
+            <blockquote>{{ article['article_text'] }}</blockquote>
+
+            <form action="{{ url_for('lab5.favorite', article_id=article['id']) }}" method="post" style="display:inline;">
+                <button type="submit" class="fav">
+                    {% if article['is_favorite'] %}
+                        Удалить из избранного
+                    {% else %}
+                        В избранное
+                    {% endif %}
+                </button>
+            </form>
+            <form action="{{ url_for('lab5.delete', article_id=article['id']) }}" method="post" style="display:inline;">
+                <button type="submit">Удалить</button>
+            </form>
+
+            <form action="{{ url_for('lab5.edit', article_id=article['id']) }}" method="get" style="display:inline;">
+                <button type="submit">Редактировать</button>
+            </form>
+        </div>
+    {% endfor %}
+
+    <a href="/lab5/">Вернуться на главную</a>
+    {% endblock %}

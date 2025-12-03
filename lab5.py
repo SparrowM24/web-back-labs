@@ -134,7 +134,27 @@ def create():
     return redirect('/lab5/list')
 
 
-
 @lab5.route('/lab5/list')
-def list_articles():
-    return "Список статей"
+def list():
+    login = session.get('login')
+    if not login:
+        return redirect('/lab5/login')
+
+    conn, cur = db_connect()
+
+    if current_app.config['DB_TYPE'] == 'postgres':
+        cur.execute(f"SELECT id FROM users WHERE login=%s;",(login, ))
+    else:
+        cur.execute(f"SELECT id FROM users WHERE login=?;",(login, ))
+
+    login_id = cur.fetchone()["id"]
+
+    if current_app.config['DB_TYPE'] == 'postgres':
+        cur.execute(f"SELECT * FROM articles WHERE login_id=%s ORDER BY is_favorite DESC, id;", (login_id, ))
+    else:
+        cur.execute(f"SELECT * FROM articles WHERE login_id=? ORDER BY is_favorite DESC, id;", (login_id, ))
+        
+    articles = cur.fetchall()
+
+    db_close(conn, cur)
+    return render_template('lab5/articles.html', articles=articles)
