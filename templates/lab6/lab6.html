@@ -102,68 +102,6 @@ function booking(officeNumber) {
     });
 }
 
-function cancelBooking(officeNumber) {  
-    const url = '/lab6/json-rpc-api/';  
-    const json = {  
-        'jsonrpc': '2.0',  
-        'method': 'cancellation',  
-        'params': officeNumber,  
-        'id': Math.round(Math.random()*1000)  
-    };  
-    fetch(url, {  
-        method: 'POST',  
-        headers: {'Content-Type': 'application/json'},  
-        body: JSON.stringify(json)  
-    })  
-    .then(function(response) {  
-        return response.json();  
-    })  
-    .then(function(data) {
-        if(data.error) {
-            switch(data.error.code) {
-                case 1:
-                    alert('Вы не авторизованы, пожалуйста, авторизуйтесь');
-                    break;
-                case 3:
-                    alert('Не ваша бронь или офис не забронирован');
-                    break;
-                case 4:
-                    alert('Офис забронирован другим пользователем');
-                    break;
-                case 5:
-                    alert('Офис не забронирован');
-                    break;
-                case -32601:
-                    alert('Странная ошибка');
-                    break;
-            }
-        }
-        else {
-            document.getElementById('office-list').innerHTML = '';
-            getOfficeList();
-            alert('Бронь успешно отменена!');
-        }
-    });
-}
-
-function updateTotalCost(total) {
-    let totalDiv = document.getElementById('total-cost');
-    if (!totalDiv) {
-        totalDiv = document.createElement('div');
-        totalDiv.id = 'total-cost';
-        document.querySelector('main').appendChild(totalDiv);
-    }
-    
-    if (total > 0) {
-        totalDiv.innerHTML = `<h3>Общая стоимость ваших офисов: ${total} руб./день</h3>`;
-    } else {
-        totalDiv.innerHTML = '';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    getOfficeList();
-})
 </script>
 {% endblock %}
 
