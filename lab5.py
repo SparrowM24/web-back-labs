@@ -9,7 +9,7 @@ lab5 = Blueprint('lab5', __name__)
 
 @lab5.route('/lab5/')
 def main():
-    return render_template('/lab5/lab5.html')
+    return render_template('/lab5/lab5.html', login=login)
 
 def db_connect():
     if current_app.config['DB_TYPE'] == 'postgres':
