@@ -273,3 +273,45 @@ def update():
     db_close(conn, cur)
     return render_template('lab5/change.html', error='Данные изменены!')
 
+
+@lab5.route('/lab5/favorite/<int:article_id>', methods=['POST'])
+def favorite(article_id):
+    login = session.get('login')
+    if not login:
+        return redirect('/lab5/login')
+    
+    conn, cur = db_connect()
+    
+    if current_app.config['DB_TYPE'] == 'postgres':
+        cur.execute("SELECT is_favorite FROM articles WHERE id=%s;", (article_id,))
+    else:
+        cur.execute("SELECT is_favorite FROM articles WHERE id=?;", (article_id,))
+    
+    article = cur.fetchone()
+    if article:
+        new_favorite = not article['is_favorite']
+        
+        if current_app.config['DB_TYPE'] == 'postgres':
+            cur.execute("UPDATE articles SET is_favorite=%s WHERE id=%s;", (new_favorite, article_id))
+        else:
+            cur.execute("UPDATE articles SET is_favorite=? WHERE id=?;", (new_favorite, article_id))
+    
+    db_close(conn, cur)
+    return redirect('/lab5/list')
+
+@lab5.route('/lab5/public')
+def public_articles():
+    conn, cur = db_connect()
+
+    if current_app.config['DB_TYPE'] == 'postgres':
+        cur.execute("SELECT * FROM articles WHERE is_public=true;")
+    else:
+        cur.execute("SELECT * FROM articles WHERE is_public=1;")
+
+    articles = cur.fetchall()
+    db_close(conn, cur)
+
+    if not articles:
+        return render_template('lab5/public.html', articles=[], error="Публичных статей нет")
+
+    return render_template('lab5/public.html', articles=articles)

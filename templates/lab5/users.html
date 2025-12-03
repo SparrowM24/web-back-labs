@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block lab %}Лабораторная работа 5{% endblock %}
+
+{% block main %}
+    <h1>Список пользователей</h1>
+
+    {% if users %}
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Логин</th>
+                <th>Имя</th>
+            </tr>
+
+            {% for user in users %}
+            <tr>
+                <td>{{ user['id'] }}</td>
+                <td>{{ user['login'] }}</td>
+                <td>{{ user['full_name'] or 'Безымянный' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p style="text-align:center;">Нет зарегистрированных пользователей</p>
+    {% endif %}
+{% endblock %}
