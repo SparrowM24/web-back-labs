@@ -4,17 +4,16 @@
 
 {% block main %}
     <h1>Система управления статьями</h1>
-    
     <div class="user">
-        {% if login %}
-            Пользователь: {{ login  }}
+        {% if login != "Anonymous" %}
+            Пользователь: {{ login }}
         {% else %}
             Anonymous
         {% endif %}
     </div>
 
     <h2>Основные разделы:</h2>
-    
+
     <div class="button-grid">
         <a href="/lab5/login" class="nav-button">
             <div class="button-content">
@@ -25,7 +24,7 @@
                 </div>
             </div>
         </a>
-        
+
         <a href="/lab5/register" class="nav-button">
             <div class="button-content">
                 <span class="button-icon">📝</span>
@@ -35,7 +34,7 @@
                 </div>
             </div>
         </a>
-        
+
         <a href="/lab5/list" class="nav-button">
             <div class="button-content">
                 <span class="button-icon">📄</span>
@@ -45,7 +44,7 @@
                 </div>
             </div>
         </a>
-        
+
         <a href="/lab5/create" class="nav-button">
             <div class="button-content">
                 <span class="button-icon">✏️</span>
