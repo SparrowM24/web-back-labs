@@ -4,25 +4,75 @@
 
 {% block main %}
     <style>
+        /* Стили для модального окна */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            max-width: 90%;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Остальные стили остаются как были */
+        .modal label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        
+        .modal input, .modal textarea {
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        
+        .modal textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-buttons {
+            margin-top: 15px;
+            text-align: right;
+        }
+        
+        /* Стили для таблицы */
         table {
             border-collapse: collapse;
             width: 100%;
         }
+        
         th, td {
-            padding: 10px;
+            padding: 8px;
             text-align: left;
         }
+        
+        
         button {
             margin: 2px;
             padding: 5px 10px;
         }
     </style>
-    <h1>Лабораторная работа 7</h1>
-    <nav>
-        <a href="/">Главная</a> |
-        <a href="/lab7/">Лаб 7</a>
-    </nav>
-
+    
+    <!-- Остальной HTML код без изменений -->
     <h1>Список фильмов</h1>
     
     <table>
@@ -36,12 +86,46 @@
             </tr>
         </thead>
         <tbody id="film-list">
-            <!-- Сюда будут добавляться фильмы через JS -->
+            <!-- Фильмы будут добавляться через JS -->
         </tbody>
     </table>
     
     <div style="margin-top: 20px;">
         <button onclick="addFilm()">Добавить фильм</button>
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования -->
+    <div id="filmModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Добавить фильм</h2>
+            
+            <input type="hidden" id="filmId">
+            
+            <label>
+                Название фильма на русском:
+                <input type="text" id="title_ru">
+            </label>
+            
+            <label>
+                Название фильма на оригинальном языке:
+                <input type="text" id="title">
+            </label>
+            
+            <label>
+                Год выпуска:
+                <input type="number" id="year">
+            </label>
+            
+            <label>
+                Описание:
+                <textarea id="description"></textarea>
+            </label>
+            
+            <div class="modal-buttons">
+                <button onclick="saveFilm()">Сохранить</button>
+                <button onclick="cancel()">Отмена</button>
+            </div>
+        </div>
     </div>
     
     <script src="{{ url_for('static', filename='lab7/main.js') }}"></script>
