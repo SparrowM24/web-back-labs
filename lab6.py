@@ -7,7 +7,7 @@ import numpy as np
 
 lab6 = Blueprint('lab6', __name__)
 
-# Инициализация офисов (если нужно создать в БД)
+# Инициализация офисов 
 def init_offices():
     conn, cur = db_connect()
     try:
