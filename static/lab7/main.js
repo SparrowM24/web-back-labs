@@ -1,4 +1,4 @@
-// Меняем порядок: сначала русское, потом оригинальноеlet currentFilmId = null;
+let currentFilmId = null;
 
 // Функция для заполнения таблицы фильмами
 function fillFilmList() {
@@ -22,25 +22,21 @@ function fillFilmList() {
                 
                 let tr = document.createElement('tr');
                 
-                // 1. РУССКОЕ НАЗВАНИЕ (теперь первый столбец)
+                // 1. РУССКОЕ НАЗВАНИЕ
                 let tdTitleRu = document.createElement('td');
                 tdTitleRu.textContent = film.title_ru || '';
                 
-                // 2. ОРИГИНАЛЬНОЕ НАЗВАНИЕ (теперь второй столбец, оформляем курсивом)
+                // 2. ОРИГИНАЛЬНОЕ НАЗВАНИЕ
                 let tdTitle = document.createElement('td');
                 let originalTitle = film.title || '';
                 
                 if (originalTitle) {
-                    // Если оригинальное название есть, показываем его курсивом
                     if (originalTitle === film.title_ru) {
-                        // Если названия одинаковые, показываем "то же"
                         tdTitle.innerHTML = '<span class="original-title">(то же)</span>';
                     } else {
-                        // Если разные, показываем оригинальное название курсивом
                         tdTitle.innerHTML = '<span class="original-title">' + originalTitle + '</span>';
                     }
                 } else {
-                    // Если оригинального названия нет
                     tdTitle.innerHTML = '<span class="original-title">—</span>';
                 }
                 
@@ -74,7 +70,6 @@ function fillFilmList() {
                 tdActions.appendChild(editButton);
                 tdActions.appendChild(delButton);
 
-                // Меняем порядок: сначала русское, потом оригинальное
                 tr.appendChild(tdTitleRu);
                 tr.appendChild(tdTitle);
                 tr.appendChild(tdYear);
@@ -93,7 +88,7 @@ function fillFilmList() {
         });
 }
 
-// Остальные функции остаются БЕЗ изменений:
+// Функция удаления фильма
 function deleteFilm(id, title) {
     if(! confirm('Вы точно хотите удалить фильм "' + title + '"?'))
         return;
@@ -104,6 +99,7 @@ function deleteFilm(id, title) {
     });
 }
 
+// Очистить сообщение об ошибке
 function clearError() {
     let errorDiv = document.getElementById('error-message');
     if (errorDiv) {
@@ -112,25 +108,29 @@ function clearError() {
     }
 }
 
+// Показать сообщение об ошибке
 function showError(message) {
     let errorDiv = document.getElementById('error-message');
     if (errorDiv) {
-        errorDiv.textContent = message;
+        errorDiv.innerHTML = message;
         errorDiv.style.display = 'block';
     }
 }
 
+// Показать модальное окно
 function showModal() {
     document.getElementById('filmModal').style.display = 'block';
     clearError();
 }
 
+// Скрыть модальное окно
 function hideModal() {
     document.getElementById('filmModal').style.display = 'none';
     clearForm();
     clearError();
 }
 
+// Очистить форму
 function clearForm() {
     document.getElementById('title_ru').value = '';
     document.getElementById('title').value = '';
@@ -140,10 +140,12 @@ function clearForm() {
     currentFilmId = null;
 }
 
+// Отмена
 function cancel() {
     hideModal();
 }
 
+// Добавить фильм
 function addFilm() {
     clearForm();
     clearError();
@@ -151,6 +153,7 @@ function addFilm() {
     showModal();
 }
 
+// Редактировать фильм
 function editFilm(id, film) {
     currentFilmId = id;
     
@@ -164,18 +167,14 @@ function editFilm(id, film) {
     showModal();
 }
 
+// Сохранить фильм
 function saveFilm() {
     let filmData = {
-        title_ru: document.getElementById('title_ru').value,
-        title: document.getElementById('title').value,
+        title_ru: document.getElementById('title_ru').value.trim(),
+        title: document.getElementById('title').value.trim(),
         year: parseInt(document.getElementById('year').value) || 0,
-        description: document.getElementById('description').value
+        description: document.getElementById('description').value.trim()
     };
-    
-    if (!filmData.title_ru.trim()) {
-        showError('Введите название на русском');
-        return;
-    }
     
     clearError();
     
@@ -204,8 +203,15 @@ function saveFilm() {
         }
     })
     .then(function(data) {
-        if (data.description) {
-            showError(data.description);
+        if (Object.keys(data).length > 0) {
+            // Показываем все ошибки
+            let errorMessages = [];
+            if (data.title_ru) errorMessages.push(data.title_ru);
+            if (data.title) errorMessages.push(data.title);
+            if (data.year) errorMessages.push(data.year);
+            if (data.description) errorMessages.push(data.description);
+            
+            showError(errorMessages.join('<br>'));
         } else {
             hideModal();
             fillFilmList();

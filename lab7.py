@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, abort, jsonify
+from datetime import datetime
 
 lab7 = Blueprint('lab7', __name__)
 
@@ -40,6 +41,39 @@ films = [
     }
 ]
 
+def validate_film(film):
+    """Валидация данных фильма"""
+    errors = {}
+    
+    # 1. Русское название — должно быть непустым
+    title_ru = film.get('title_ru', '').strip()
+    if not title_ru:
+        errors['title_ru'] = 'Русское название обязательно'
+    
+    # 2. Оригинальное название — должно быть непустым, если русское пустое
+    # (но мы уже проверили что русское не пустое, так что эта проверка вторична)
+    title = film.get('title', '').strip()
+    if not title_ru and not title:
+        errors['title'] = 'Хотя бы одно название должно быть заполнено'
+    
+    # 3. Год — должен быть от 1895 до текущего
+    try:
+        year = int(film.get('year', 0))
+        current_year = datetime.now().year
+        if year < 1895 or year > current_year:
+            errors['year'] = f'Год должен быть от 1895 до {current_year}'
+    except (ValueError, TypeError):
+        errors['year'] = 'Год должен быть числом'
+    
+    # 4. Описание — должно быть непустым, но не более 2000 символов
+    description = film.get('description', '').strip()
+    if not description:
+        errors['description'] = 'Описание обязательно'
+    elif len(description) > 2000:
+        errors['description'] = 'Описание не должно превышать 2000 символов'
+    
+    return errors
+
 @lab7.route('/lab7/rest-api/films/', methods=['GET'])
 def get_films():
     return jsonify(films)
@@ -64,13 +98,14 @@ def put_film(id):
     
     film = request.get_json()
     
-    # Проверка, что описание не пустое
-    if not film.get('description', '').strip():
-        return jsonify({"description": "Описание не может быть пустым"}), 400
+    # Валидация данных
+    errors = validate_film(film)
+    if errors:
+        return jsonify(errors), 400
     
-    # Улучшенная логика: если русское название есть, а оригинальное пустое или отсутствует - копируем русское в оригинальное
-    title_ru = film.get('title_ru', '')
-    title = film.get('title', '')
+    # Если русское название есть, а оригинальное пустое - копируем русское в оригинальное
+    title_ru = film.get('title_ru', '').strip()
+    title = film.get('title', '').strip()
     
     if title_ru and (not title or title.strip() == ''):
         film['title'] = title_ru
@@ -82,13 +117,14 @@ def put_film(id):
 def add_film():
     film = request.get_json()
     
-    # Проверка, что описание не пустое
-    if not film.get('description', '').strip():
-        return jsonify({"description": "Описание не может быть пустым"}), 400
+    # Валидация данных
+    errors = validate_film(film)
+    if errors:
+        return jsonify(errors), 400
     
-    # Улучшенная логика: если русское название есть, а оригинальное пустое или отсутствует - копируем русское в оригинальное
-    title_ru = film.get('title_ru', '')
-    title = film.get('title', '')
+    # Если русское название есть, а оригинальное пустое - копируем русское в оригинальное
+    title_ru = film.get('title_ru', '').strip()
+    title = film.get('title', '').strip()
     
     if title_ru and (not title or title.strip() == ''):
         film['title'] = title_ru
