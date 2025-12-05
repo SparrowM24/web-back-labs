@@ -1,4 +1,4 @@
-let currentFilmId = null;
+// Меняем порядок: сначала русское, потом оригинальноеlet currentFilmId = null;
 
 // Функция для заполнения таблицы фильмами
 function fillFilmList() {
@@ -7,7 +7,7 @@ function fillFilmList() {
             return response.json();
         })
         .then(function(films) {
-            console.log('Получены фильмы:', films); // Для отладки
+            console.log('Получены фильмы:', films);
             
             let tbody = document.getElementById('film-list');
             if (!tbody) {
@@ -22,19 +22,33 @@ function fillFilmList() {
                 
                 let tr = document.createElement('tr');
                 
-                // Английское название
-                let tdTitle = document.createElement('td');
-                tdTitle.textContent = film.title || '';
-                
-                // Русское название
+                // 1. РУССКОЕ НАЗВАНИЕ (теперь первый столбец)
                 let tdTitleRu = document.createElement('td');
                 tdTitleRu.textContent = film.title_ru || '';
                 
-                // Год
+                // 2. ОРИГИНАЛЬНОЕ НАЗВАНИЕ (теперь второй столбец, оформляем курсивом)
+                let tdTitle = document.createElement('td');
+                let originalTitle = film.title || '';
+                
+                if (originalTitle) {
+                    // Если оригинальное название есть, показываем его курсивом
+                    if (originalTitle === film.title_ru) {
+                        // Если названия одинаковые, показываем "то же"
+                        tdTitle.innerHTML = '<span class="original-title">(то же)</span>';
+                    } else {
+                        // Если разные, показываем оригинальное название курсивом
+                        tdTitle.innerHTML = '<span class="original-title">' + originalTitle + '</span>';
+                    }
+                } else {
+                    // Если оригинального названия нет
+                    tdTitle.innerHTML = '<span class="original-title">—</span>';
+                }
+                
+                // 3. Год
                 let tdYear = document.createElement('td');
                 tdYear.textContent = film.year || '';
                 
-                // Описание
+                // 4. Описание
                 let tdDescription = document.createElement('td');
                 let description = film.description || '';
                 if (description.length > 100) {
@@ -42,7 +56,7 @@ function fillFilmList() {
                 }
                 tdDescription.textContent = description;
                 
-                // Кнопки
+                // 5. Кнопки
                 let tdActions = document.createElement('td');
                 
                 let editButton = document.createElement('button');
@@ -60,8 +74,9 @@ function fillFilmList() {
                 tdActions.appendChild(editButton);
                 tdActions.appendChild(delButton);
 
-                tr.appendChild(tdTitle);
+                // Меняем порядок: сначала русское, потом оригинальное
                 tr.appendChild(tdTitleRu);
+                tr.appendChild(tdTitle);
                 tr.appendChild(tdYear);
                 tr.appendChild(tdDescription);
                 tr.appendChild(tdActions);
@@ -78,7 +93,7 @@ function fillFilmList() {
         });
 }
 
-// Функция удаления фильма
+// Остальные функции остаются БЕЗ изменений:
 function deleteFilm(id, title) {
     if(! confirm('Вы точно хотите удалить фильм "' + title + '"?'))
         return;
@@ -89,7 +104,6 @@ function deleteFilm(id, title) {
     });
 }
 
-// Очистить сообщение об ошибке
 function clearError() {
     let errorDiv = document.getElementById('error-message');
     if (errorDiv) {
@@ -98,7 +112,6 @@ function clearError() {
     }
 }
 
-// Показать сообщение об ошибке
 function showError(message) {
     let errorDiv = document.getElementById('error-message');
     if (errorDiv) {
@@ -107,20 +120,17 @@ function showError(message) {
     }
 }
 
-// Показать модальное окно
 function showModal() {
     document.getElementById('filmModal').style.display = 'block';
     clearError();
 }
 
-// Скрыть модальное окно
 function hideModal() {
     document.getElementById('filmModal').style.display = 'none';
     clearForm();
     clearError();
 }
 
-// Очистить форму
 function clearForm() {
     document.getElementById('title_ru').value = '';
     document.getElementById('title').value = '';
@@ -130,12 +140,10 @@ function clearForm() {
     currentFilmId = null;
 }
 
-// Отмена
 function cancel() {
     hideModal();
 }
 
-// Добавить фильм
 function addFilm() {
     clearForm();
     clearError();
@@ -143,7 +151,6 @@ function addFilm() {
     showModal();
 }
 
-// Редактировать фильм
 function editFilm(id, film) {
     currentFilmId = id;
     
@@ -157,7 +164,6 @@ function editFilm(id, film) {
     showModal();
 }
 
-// Сохранить фильм
 function saveFilm() {
     let filmData = {
         title_ru: document.getElementById('title_ru').value,
@@ -166,7 +172,6 @@ function saveFilm() {
         description: document.getElementById('description').value
     };
     
-    // Проверка на фронтенде
     if (!filmData.title_ru.trim()) {
         showError('Введите название на русском');
         return;
@@ -212,11 +217,9 @@ function saveFilm() {
     });
 }
 
-// Загружаем фильмы при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     fillFilmList();
     
-    // Закрыть модальное окно при клике вне его
     window.onclick = function(event) {
         let modal = document.getElementById('filmModal');
         if (event.target === modal) {

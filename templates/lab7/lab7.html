@@ -17,7 +17,7 @@
         }
         
         .modal-content {
-            background-color: white;
+            background-color: #504b44;
             margin: auto;
             position: absolute;
             top: 50%;
@@ -51,56 +51,48 @@
             margin-top: 15px;
             text-align: right;
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
+        
+        /* Стили для сообщений об ошибках */
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #ffe6e6;
+            border: 1px solid red;
+            border-radius: 4px;
+            display: none;
         }
         
-        th, td {
+        /* Стили для таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #504b44;  /* Тёмно-коричневый фон */
+            color: #cec7b9;             /* Светло-бежевый текст */
+            padding: 12px 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        td {
             padding: 8px;
             text-align: left;
         }
-        
+
+        /* Стили для оригинального названия */
+        .original-title {
+            font-style: italic;
+            color: #666;
+            font-size: 0.9em;
+        }
         
         button {
             margin: 2px;
             padding: 5px 10px;
-        }
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin: 5px 0;
-            padding: 5px;
-            border: 1px solid red;
-            border-radius: 3px;
-            background-color: #ffe6e6;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            overflow: auto;
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: auto;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px;
-            border: 1px solid #888;
-            width: 400px;
-            max-width: 90%;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
         }
     </style>
     
@@ -109,14 +101,15 @@
     <table>
         <thead>
             <tr>
-                <th>Название (англ.)</th>
                 <th>Название (рус.)</th>
+                <th>Название (ориг.)</th>
                 <th>Год</th>
                 <th>Описание</th>
                 <th>Действия</th>
             </tr>
         </thead>
         <tbody id="film-list">
+            <!-- Фильмы будут добавляться через JavaScript -->
         </tbody>
     </table>
     
@@ -124,6 +117,7 @@
         <button onclick="addFilm()">Добавить фильм</button>
     </div>
 
+    <!-- Модальное окно для добавления/редактирования -->
     <div id="filmModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Добавить фильм</h2>
@@ -132,23 +126,26 @@
             
             <label>
                 Название фильма на русском:
-                <input type="text" id="title_ru">
+                <input type="text" id="title_ru" required>
             </label>
             
             <label>
                 Название фильма на оригинальном языке:
-                <input type="text" id="title">
+                <input type="text" id="title" placeholder="Оставьте пустым, если фильм русский">
             </label>
             
             <label>
                 Год выпуска:
-                <input type="number" id="year">
+                <input type="number" id="year" min="1900" max="2100">
             </label>
             
             <label>
                 Описание:
-                <textarea id="description"></textarea>
+                <textarea id="description" required></textarea>
             </label>
+            
+            <!-- Блок для отображения ошибок -->
+            <div id="error-message" class="error-message"></div>
             
             <div class="modal-buttons">
                 <button onclick="saveFilm()">Сохранить</button>
