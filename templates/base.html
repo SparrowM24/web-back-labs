@@ -1,517 +1,81 @@
-{% extends "base.html" %}
-
-{% block lab %}
-    Лабораторная работа 6
-{% endblock %}
-
-{% block script %}
-<script>
-    // Функция для получения списка офисов
-    function getOfficeList() {
-        const url = '/lab6/json-rpc-api/';
-        const json = {
-            'jsonrpc': '2.0',
-            'method': 'info',
-            'id': Math.round(Math.random() * 1000)
-        };
-        
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(json)
-        })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            if (data.error) {
-                showError(data.error);
-                return;
-            }
-            
-            const officeList = data.result;
-            const ul = document.getElementById('office-list');
-            ul.innerHTML = '';
-            
-            let totalCost = 0;
-            const userLogin = '{{ session.get("login", "") }}';
-            
-            // Создаем элементы для каждого офиса
-            officeList.forEach(function(office) {
-                const li = document.createElement('li');
-                li.className = 'office-item';
-                
-                // Определяем статус офиса
-                const isBooked = office.tenant;
-                const isMyBooking = office.tenant === userLogin;
-                const statusClass = isBooked ? 'status-busy' : 'status-free';
-                const statusText = isBooked ? 
-                    (isMyBooking ? `забронирован вами` : `занят (${office.tenant})`) : 
-                    'свободен';
-                
-                // Создаем содержимое карточки офиса
-                li.innerHTML = `
-                    <div class="office-header">
-                        <h2>Офис №${office.number}</h2>
-                        <div class="office-price">${office.price} руб./день</div>
-                    </div>
-                    <div class="office-status">
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </div>
-                `;
-                
-                // Создаем кнопку действия
-                const buttonContainer = document.createElement('div');
-                buttonContainer.className = 'office-actions';
-                
-                if (!isBooked) {
-                    // Кнопка бронирования для свободного офиса
-                    const bookButton = document.createElement('button');
-                    bookButton.className = 'btn btn-book';
-                    bookButton.innerHTML = '<i class="fas fa-calendar-plus"></i> Забронировать';
-                    bookButton.onclick = function() { 
-                        booking(office.number); 
-                    };
-                    buttonContainer.appendChild(bookButton);
-                } else if (isMyBooking) {
-                    // Кнопка отмены для своего бронирования
-                    const cancelButton = document.createElement('button');
-                    cancelButton.className = 'btn btn-cancel';
-                    cancelButton.innerHTML = '<i class="fas fa-calendar-minus"></i> Отменить бронь';
-                    cancelButton.onclick = function() { 
-                        cancelBooking(office.number); 
-                    };
-                    buttonContainer.appendChild(cancelButton);
-                    totalCost += parseInt(office.price);
-                } else {
-                    // Информация о чужом бронировании
-                    const infoSpan = document.createElement('span');
-                    infoSpan.className = 'booked-info';
-                    infoSpan.textContent = 'Занято другим пользователем';
-                    buttonContainer.appendChild(infoSpan);
-                }
-                
-                li.appendChild(buttonContainer);
-                ul.appendChild(li);
-            });
-            
-            // Обновляем общую стоимость
-            updateTotalCost(totalCost);
-        })
-        .catch(function(error) {
-            console.error('Ошибка при получении списка офисов:', error);
-            alert('Произошла ошибка при загрузке списка офисов');
-        });
-    }
-    
-    // Функция бронирования офиса
-    function booking(officeNumber) {
-        const url = '/lab6/json-rpc-api/';
-        const json = {
-            'jsonrpc': '2.0',
-            'method': 'booking',
-            'params': officeNumber,
-            'id': Math.round(Math.random() * 1000)
-        };
-        
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(json)
-        })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            if (data.error) {
-                handleBookingError(data.error);
-            } else {
-                showSuccess('Офис успешно забронирован!');
-                getOfficeList(); // Обновляем список
-            }
-        })
-        .catch(function(error) {
-            console.error('Ошибка при бронировании:', error);
-            alert('Произошла ошибка при бронировании офиса');
-        });
-    }
-    
-    // Функция отмены бронирования
-    function cancelBooking(officeNumber) {
-        if (!confirm('Вы уверены, что хотите отменить бронирование этого офиса?')) {
-            return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дьячкова Алиса. {% block lab %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lab1/main.css')}}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <style>
+        body {
+            {% if request.cookies.get('color') %}
+            color: {{ request.cookies.get('color') }};
+            {% endif %}
+            {% if request.cookies.get('bg_color') %}
+            background-color: {{ request.cookies.get('bg_color') }};
+            {% endif %}
+            {% if request.cookies.get('font_size') %}
+            font-size: {{ request.cookies.get('font_size') }}px;
+            {% endif %}
+            {% if request.cookies.get('font_family') %}
+            font-family: {{ request.cookies.get('font_family') }};
+            {% endif %}
         }
         
-        const url = '/lab6/json-rpc-api/';
-        const json = {
-            'jsonrpc': '2.0',
-            'method': 'cancellation',
-            'params': officeNumber,
-            'id': Math.round(Math.random() * 1000)
-        };
+        h1, h2, h3 {
+            {% if request.cookies.get('color') %}
+            color: {{ request.cookies.get('color') }};
+            {% endif %}
+            {% if request.cookies.get('font_family') %}
+            font-family: {{ request.cookies.get('font_family') }};
+            {% endif %}
+        }
         
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(json)
-        })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            if (data.error) {
-                handleCancellationError(data.error);
-            } else {
-                showSuccess('Бронирование успешно отменено!');
-                getOfficeList(); // Обновляем список
-            }
-        })
-        .catch(function(error) {
-            console.error('Ошибка при отмене бронирования:', error);
-            alert('Произошла ошибка при отмене бронирования');
-        });
-    }
-    
-    // Обработка ошибок бронирования
-    function handleBookingError(error) {
-        switch(error.code) {
-            case 1:
-                alert('Ошибка: Вы не авторизованы. Пожалуйста, войдите в систему.');
-                break;
-            case 2:
-                alert('Ошибка: Этот офис уже забронирован.');
-                break;
-            case 6:
-                alert('Ошибка: Офис не найден.');
-                break;
-            default:
-                alert(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
+        a {
+            {% if request.cookies.get('color') %}
+            color: {{ request.cookies.get('color') }};
+            {% endif %}
         }
-    }
-    
-    // Обработка ошибок отмены бронирования
-    function handleCancellationError(error) {
-        switch(error.code) {
-            case 1:
-                alert('Ошибка: Вы не авторизованы. Пожалуйста, войдите в систему.');
-                break;
-            case 4:
-                alert('Ошибка: Этот офис забронирован другим пользователем.');
-                break;
-            case 5:
-                alert('Ошибка: Этот офис не забронирован.');
-                break;
-            case 6:
-                alert('Ошибка: Офис не найден.');
-                break;
-            default:
-                alert(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
-        }
-    }
-    
-    // Показать сообщение об успехе
-    function showSuccess(message) {
-        // Создаем временное уведомление
-        const notification = document.createElement('div');
-        notification.className = 'notification success';
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4CAF50;
+        
+        button {
+            {% if request.cookies.get('color') %}
             color: white;
-            padding: 15px;
-            border-radius: 5px;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Удаляем уведомление через 3 секунды
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-    
-    // Показать сообщение об ошибке
-    function showError(error) {
-        alert(`Ошибка ${error.code}: ${error.message}`);
-    }
-    
-    // Обновить отображение общей стоимости
-    function updateTotalCost(total) {
-        let totalDiv = document.getElementById('total-cost');
-        
-        if (total > 0) {
-            if (!totalDiv) {
-                totalDiv = document.createElement('div');
-                totalDiv.id = 'total-cost';
-                totalDiv.className = 'total-cost-container';
-                document.querySelector('main').appendChild(totalDiv);
-            }
-            
-            totalDiv.innerHTML = `
-                <div class="total-cost-card">
-                    <h3><i class="fas fa-calculator"></i> Общая стоимость аренды</h3>
-                    <div class="total-amount">${total} руб./день</div>
-                    <p>Вы арендуете офисы на общую сумму ${total} рублей в день</p>
-                </div>
-            `;
-        } else if (totalDiv) {
-            totalDiv.innerHTML = '';
+            {% endif %}
+            {% if request.cookies.get('bg_color') %}
+            background-color: {{ request.cookies.get('color') or '#4364ac' }};
+            {% endif %}
         }
-    }
-    
-    // Инициализация при загрузке страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        getOfficeList();
-        
-        // Обновляем список каждые 30 секунд для актуальности данных
-        setInterval(getOfficeList, 30000);
-    });
-</script>
-{% endblock %}
+    </style>
+</head>
+<body>
+    <header>
+        WEB-программирование, часть 2. {{ self.lab() }}
+    </header>
 
-{% block main %}
-<div class="lab6-container">
-    <h1><i class="fas fa-building"></i> Аренда офисов</h1>
-    <p class="lab-description">
-        На этой странице вы можете забронировать или отменить бронирование офисов. 
-        {% if session.get('login') %}
-            Вы авторизованы как <strong>{{ session.get('login') }}</strong>.
-        {% else %}
-            Для бронирования офисов необходимо <a href="/lab4/">авторизоваться</a>.
+    <main>
+        {% block main %}{% endblock %}
+        
+        {% if request.cookies.get('color') or request.cookies.get('bg_color') or request.cookies.get('font_size') or request.cookies.get('font_family') %}
+        <div style="margin-top: 20px;">
+            <a href="/lab3/clear_settings">
+                <button type="button">Сбросить стили</button>
+            </a>
+        </div>
         {% endif %}
-    </p>
-    
-    <div class="offices-grid">
-        <ul id="office-list" class="office-list">
-            <!-- Офисы будут загружены через JavaScript -->
-            <li class="loading">Загрузка списка офисов...</li>
-        </ul>
-    </div>
-    
-    <div class="instructions">
-        <h3><i class="fas fa-info-circle"></i> Инструкция:</h3>
-        <ul>
-            <li>Нажмите "Забронировать" для аренды свободного офиса</li>
-            <li>Нажмите "Отменить бронь" для освобождения своего офиса</li>
-            <li>Стоимость аренды указана за один день</li>
-            <li>Общая стоимость вашей аренды отображается ниже</li>
-        </ul>
-    </div>
-    
-    <!-- Блок с общей стоимостью будет добавлен через JavaScript -->
-    <div id="total-cost"></div>
-</div>
+        <button class="back-button" onclick="window.history.back()">← Назад</button>
 
-<style>
-    .lab6-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    
-    .lab-description {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 30px;
-        border-left: 4px solid #007bff;
-    }
-    
-    .office-list {
-        list-style: none;
-        padding: 0;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .office-item {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: 1px solid #e9ecef;
-    }
-    
-    .office-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .office-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #f8f9fa;
-    }
-    
-    .office-header h2 {
-        margin: 0;
-        color: #2c3e50;
-        font-size: 1.5em;
-    }
-    
-    .office-price {
-        background: #007bff;
-        color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 0.9em;
-    }
-    
-    .office-status {
-        margin-bottom: 15px;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 5px 15px;
-        border-radius: 15px;
-        font-size: 0.9em;
-        font-weight: 500;
-    }
-    
-    .status-free {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    .status-busy {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    
-    .office-actions {
-        text-align: center;
-    }
-    
-    .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        font-size: 1em;
-    }
-    
-    .btn-book {
-        background: #28a745;
-        color: white;
-    }
-    
-    .btn-book:hover {
-        background: #218838;
-        transform: scale(1.05);
-    }
-    
-    .btn-cancel {
-        background: #dc3545;
-        color: white;
-    }
-    
-    .btn-cancel:hover {
-        background: #c82333;
-        transform: scale(1.05);
-    }
-    
-    .booked-info {
-        color: #6c757d;
-        font-style: italic;
-        font-size: 0.9em;
-    }
-    
-    .loading {
-        text-align: center;
-        padding: 40px;
-        grid-column: 1 / -1;
-        color: #6c757d;
-    }
-    
-    .total-cost-container {
-        margin-top: 40px;
-        padding: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 10px;
-        color: white;
-    }
-    
-    .total-cost-card {
-        text-align: center;
-    }
-    
-    .total-cost-card h3 {
-        margin: 0 0 15px 0;
-        font-size: 1.5em;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-    }
-    
-    .total-amount {
-        font-size: 3em;
-        font-weight: bold;
-        margin: 20px 0;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .instructions {
-        background: #e8f4f8;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 30px;
-        border-left: 4px solid #17a2b8;
-    }
-    
-    .instructions h3 {
-        color: #17a2b8;
-        margin-top: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .instructions ul {
-        margin: 15px 0 0 0;
-        padding-left: 20px;
-    }
-    
-    .instructions li {
-        margin-bottom: 8px;
-        line-height: 1.5;
-    }
-    
-    @media (max-width: 768px) {
-        .office-list {
-            grid-template-columns: 1fr;
-        }
-        
-        .office-header {
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .total-amount {
-            font-size: 2em;
-        }
-    }
-</style>
-{% endblock %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const backButton = document.querySelector('.back-button');
+                if (window.location.pathname === '/' || window.history.length <= 1) {
+                    backButton.style.display = 'none';
+                }
+            });
+        </script>
+    </main>
+
+    <footer>
+        &copy; Дьячкова Алиса, ФБИ-32, 3 курс, 2023
+    </footer>
+</body>
+</html>

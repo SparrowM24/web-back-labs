@@ -1,173 +1,158 @@
-{% extends "base.html" %}
-
-{% block lab %}
-    Лабораторная работа 6
-{% endblock %}
-
-{% block script %}
-<script>
-function getOfficeList() {
-    const url = '/lab6/json-rpc-api/';
-    const json = {
-        'jsonrpc': '2.0',
-        'method': 'info',
-        'id': Math.round(Math.random()*1000)
-    };
-    fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(json)
-    })
-    .then(function(response) {
-        return response.json()
-    })
-    .then(function(data) {
-        const office_list = data.result;
-        const ul = document.getElementById('office-list');
-        ul.innerHTML = '';
-        
-        let totalCost = 0;
-        
-        for(let i = 0; i < office_list.length; i++) {
-            const office = office_list[i];
-            const li = document.createElement('li');
-            
-            const statusClass = office.tenant ? 'status-busy' : 'status-free';
-            const statusText = office.tenant ? `занят (${office.tenant})` : 'свободен';
-            
-            li.innerHTML = `
-                <h2>Офис ${office.number}</h2>
-                <div class="office-price">${office.price || '1000'} руб./день</div>
-                <div class="${statusClass}">${statusText}</div>
-            `;
-
-            const button = document.createElement('button');
-            if (!office.tenant) {
-                button.className = 'btn-book';
-                button.innerText = 'зарезервировать';
-                button.onclick = function() { booking(office.number); };
-            } else {
-                button.className = 'btn-cancel';
-                button.innerText = 'отменить бронь';
-                button.onclick = function() { cancelBooking(office.number); };
-                
-                const userLogin = '{{ session.get("login", "") }}';
-                if (office.tenant === userLogin) {
-                    totalCost += parseFloat(office.price) || 1000;
-                }
-            }
-
-            li.appendChild(button);
-            ul.appendChild(li);
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа 6</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        
-        updateTotalCost(totalCost);
-    });
-}
-
-function booking(officeNumber) {  
-    const url = '/lab6/json-rpc-api/';  
-    const json = {  
-        'jsonrpc': '2.0',  
-        'method': 'booking',  
-        'params': officeNumber,  
-        'id': Math.round(Math.random()*1000)  
-    };  
-    fetch(url, {  
-        method: 'POST',  
-        headers: {'Content-Type': 'application/json'},  
-        body: JSON.stringify(json)  
-    })  
-    .then(function(response) {  
-        return response.json();  
-    })  
-    .then(function(data) {
-        if(data.error) {
-            switch(data.error.code) {
-                case 1:
-                    alert('Вы не авторизованы, пожалуйста, авторизуйтесь');
-                    break;
-                case 2:
-                    alert('Офис уже арендуется');
-                    break;
-                case -32601:
-                    alert('Странная ошибка');
-                    break;
-            }
+        .office {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
         }
-        else {
-            document.getElementById('office-list').innerHTML = '';
-            getOfficeList();
+        .booked {
+            background-color: #ffebee;
         }
-    });
-}
-
-function cancelBooking(officeNumber) {  
-    const url = '/lab6/json-rpc-api/';  
-    const json = {  
-        'jsonrpc': '2.0',  
-        'method': 'cancellation',  
-        'params': officeNumber,  
-        'id': Math.round(Math.random()*1000)  
-    };  
-    fetch(url, {  
-        method: 'POST',  
-        headers: {'Content-Type': 'application/json'},  
-        body: JSON.stringify(json)  
-    })  
-    .then(function(response) {  
-        return response.json();  
-    })  
-    .then(function(data) {
-        if(data.error) {
-            switch(data.error.code) {
-                case 1:
-                    alert('Вы не авторизованы, пожалуйста, авторизуйтесь');
-                    break;
-                case 3:
-                    alert('Не ваша бронь или офис не забронирован');
-                    break;
-                case 4:
-                    alert('Офис забронирован другим пользователем');
-                    break;
-                case 5:
-                    alert('Офис не забронирован');
-                    break;
-                case -32601:
-                    alert('Странная ошибка');
-                    break;
-            }
+        .free {
+            background-color: #e8f5e9;
         }
-        else {
-            document.getElementById('office-list').innerHTML = '';
-            getOfficeList();
-            alert('Бронь успешно отменена!');
+        button {
+            margin: 5px;
+            padding: 5px 10px;
         }
-    });
-}
-
-function updateTotalCost(total) {
-    let totalDiv = document.getElementById('total-cost');
-    if (!totalDiv) {
-        totalDiv = document.createElement('div');
-        totalDiv.id = 'total-cost';
-        document.querySelector('main').appendChild(totalDiv);
-    }
+    </style>
+</head>
+<body>
+    <h1>Лабораторная работа 6: Бронирование офисов</h1>
     
-    if (total > 0) {
-        totalDiv.innerHTML = `<h3>Общая стоимость ваших офисов: ${total} руб./день</h3>`;
-    } else {
-        totalDiv.innerHTML = '';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    getOfficeList();
-})
-</script>
-{% endblock %}
-
-{% block main %}
-    <h1>Список кабинетов</h1>
-    <ul id="office-list"></ul>
-{% endblock %}
+    <div id="auth-section">
+        <h2>Авторизация</h2>
+        <input type="text" id="login" placeholder="Введите логин">
+        <button onclick="login()">Войти</button>
+    </div>
+    
+    <div id="offices-section" style="display: none;">
+        <h2>Офисы</h2>
+        <div id="offices-container"></div>
+        <button onclick="loadOffices()">Обновить список</button>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        
+        function login() {
+            const loginInput = document.getElementById('login');
+            if (loginInput.value.trim()) {
+                currentUser = loginInput.value.trim();
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('offices-section').style.display = 'block';
+                loadOffices();
+            }
+        }
+        
+        function loadOffices() {
+            fetch('/lab6/json-rpc-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'info',
+                    id: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result) {
+                    displayOffices(data.result);
+                } else {
+                    alert('Ошибка: ' + (data.error?.message || 'Неизвестная ошибка'));
+                }
+            });
+        }
+        
+        function displayOffices(offices) {
+            const container = document.getElementById('offices-container');
+            container.innerHTML = '';
+            
+            offices.forEach(office => {
+                const officeDiv = document.createElement('div');
+                officeDiv.className = `office ${office.tenant ? 'booked' : 'free'}`;
+                
+                officeDiv.innerHTML = `
+                    <h3>Офис №${office.number}</h3>
+                    <p>Цена: ${office.price} руб./мес.</p>
+                    <p>Статус: ${office.tenant ? `Забронирован (${office.tenant})` : 'Свободен'}</p>
+                    ${!office.tenant ? 
+                        `<button onclick="bookOffice(${office.number})">Забронировать</button>` : 
+                        office.tenant === currentUser ?
+                        `<button onclick="cancelBooking(${office.number})">Отменить бронь</button>` :
+                        ''
+                    }
+                `;
+                
+                container.appendChild(officeDiv);
+            });
+        }
+        
+        function bookOffice(officeNumber) {
+            fetch('/lab6/json-rpc-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'booking',
+                    params: { office_number: officeNumber },
+                    id: 2
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result) {
+                    alert('Офис успешно забронирован!');
+                    loadOffices();
+                } else {
+                    alert('Ошибка: ' + (data.error?.message || 'Неизвестная ошибка'));
+                }
+            });
+        }
+        
+        function cancelBooking(officeNumber) {
+            fetch('/lab6/json-rpc-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'cancellation',
+                    params: { office_number: officeNumber },
+                    id: 3
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result) {
+                    alert('Бронь успешно отменена!');
+                    loadOffices();
+                } else {
+                    alert('Ошибка: ' + (data.error?.message || 'Неизвестная ошибка'));
+                }
+            });
+        }
+        
+        // Загружаем офисы при загрузке страницы
+        window.onload = loadOffices;
+    </script>
+</body>
+</html>
