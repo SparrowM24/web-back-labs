@@ -7,11 +7,11 @@ import numpy as np
 
 lab6 = Blueprint('lab6', __name__)
 
-# Инициализация офисов (если нужно создать в БД)
+# Инициализация офисов (используем ту же БД)
 def init_offices():
     conn, cur = db_connect()
     try:
-        # Проверяем, существует ли таблица
+        # Проверяем, существует ли таблица офисов
         if current_app.config['DB_TYPE'] == 'postgres':
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS offices (
@@ -66,7 +66,7 @@ def db_connect():
             host='127.0.0.1',
             database='alice_dyachkova_knowledge_base',
             user='alice_dyachkova_knowledge_base',
-            password='123'
+            password='123456'  # Исправьте пароль, если нужно
         )
         cur = conn.cursor(cursor_factory=RealDictCursor)
     else:
@@ -84,9 +84,12 @@ def db_close(conn, cur):
 
 @lab6.route('/lab6/')
 def lab():
+    # Проверяем авторизацию через ту же сессию, что и в lab5
+    login = session.get('login')
+    
     # Инициализируем офисы при первом заходе
     init_offices()
-    return render_template('lab6/lab6.html')
+    return render_template('lab6/lab6.html', login=login)
 
 @lab6.route('/lab6/json-rpc-api/', methods=['POST'])
 def api():
@@ -102,6 +105,7 @@ def api():
         id = data.get('id')
         method = data.get('method')
         
+        # Метод info доступен всем
         if method == 'info':
             conn, cur = db_connect()
             
@@ -134,12 +138,34 @@ def api():
         if not login:
             return jsonify({
                 'jsonrpc': '2.0',
-                'error': {'code': 1, 'message': 'Unauthorized'},
+                'error': {'code': 1, 'message': 'Unauthorized - требуется вход в систему'},
+                'id': id
+            }), 401
+        
+        # Проверяем, существует ли пользователь в БД
+        conn, cur = db_connect()
+        if current_app.config['DB_TYPE'] == 'postgres':
+            cur.execute("SELECT id FROM users WHERE login = %s", (login,))
+        else:
+            cur.execute("SELECT id FROM users WHERE login = ?", (login,))
+        
+        user = cur.fetchone()
+        db_close(conn, cur)
+        
+        if not user:
+            return jsonify({
+                'jsonrpc': '2.0',
+                'error': {'code': 1, 'message': 'Пользователь не найден в системе'},
                 'id': id
             }), 401
         
         if method == 'booking':
-            office_number = data.get('params')
+            params = data.get('params', {})
+            if isinstance(params, dict):
+                office_number = params.get('office_number')
+            else:
+                office_number = params
+            
             if not office_number:
                 return jsonify({
                     'jsonrpc': '2.0',
@@ -204,7 +230,12 @@ def api():
             })
         
         if method == 'cancellation':
-            office_number = data.get('params')
+            params = data.get('params', {})
+            if isinstance(params, dict):
+                office_number = params.get('office_number')
+            else:
+                office_number = params
+            
             if not office_number:
                 return jsonify({
                     'jsonrpc': '2.0',
