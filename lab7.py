@@ -1,46 +1,58 @@
-from flask import Blueprint, render_template, request, make_response, redirect, abort
-lab7 = Blueprint('lab7', __name__)
+from flask import Blueprint, render_template, request, abort, jsonify
 
+lab7 = Blueprint('lab7', __name__)
 
 @lab7.route('/lab7/')
 def main():
     return render_template('lab7/lab7.html')
 
+# Начальный список фильмов (5 штук как в задании)
 films = [
     {
-        "title": "Spirited Away",
-        "title_ru": "Унесённые призраками",
-        "year": 2001,
-        "description": "Десятилетняя Тихиро вместе с родителями попадает в странный мир духов. Чтобы спасти маму и папу, превращённых в свиней, ей предстоит работать в таинственных банях и встретиться с могущественным колдуном."
+        "title": "The Shawshank Redemption",
+        "title_ru": "Побег из Шоушенка",
+        "year": 1994,
+        "description": "Два заключенных создают крепкую дружбу, чтобы выжить в тюрьме, обретая искупление через действия простой доброты."
     },
     {
-        "title": "Stalker",
-        "title_ru": "Сталкер",
-        "year": 1979,
-        "description": "Проводник (Сталкер) ведёт двух своих клиентов — Писателя и Профессора — через опасную «Зону», где, по слухам, существует комната, исполняющая самые заветные желания."
+        "title": "The Godfather",
+        "title_ru": "Крестный отец",
+        "year": 1972,
+        "description": "Стареющий патриарх организованной преступной династии передает контроль над своей подпольной империей своему неохотному сыну."
     },
     {
-        "title": "The Grand Budapest Hotel",
-        "title_ru": "Отель «Гранд Будапешт»",
-        "year": 2014,
-        "description": "Невероятные приключения легендарного консьержа отеля и его юного помощника, ставших обладателями бесценного произведения искусства и втянутых в семейную вражду из-за огромного состояния."
+        "title": "The Dark Knight",
+        "title_ru": "Темный рыцарь",
+        "year": 2008,
+        "description": "Когда в Готэм-Сити появляется угроза, известная как Джокер, Бэтмен должен противостоять хаосу, который тот сеет."
+    },
+    {
+        "title": "Pulp Fiction",
+        "title_ru": "Криминальное чтиво",
+        "year": 1994,
+        "description": "Жизни двух киллеров, боксера, гангстера и его жены переплетаются в четырех историях о насилии и искуплении."
+    },
+    {
+        "title": "Forrest Gump",
+        "title_ru": "Форрест Гамп",
+        "year": 1994,
+        "description": "История жизни Форреста Гампа, человека с низким IQ, который невольно становится свидетелем и участником ключевых исторических событий США."
     }
 ]
 
-
+# 1. Получение всех фильмов
 @lab7.route('/lab7/rest-api/films/', methods=['GET'])
 def get_films():
-    return films
+    return jsonify(films)
 
-
+# 2. Получение одного фильма
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['GET'])
 def get_film(id):
     if id < 0 or id >= len(films):
         abort(404, description="Фильм с таким индексом не найден")
-    
-    return films[id]
+    return jsonify(films[id])
 
-
+# 3. Удаление фильма
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['DELETE'])
 def del_film(id):
     if id < 0 or id >= len(films):
@@ -48,7 +60,7 @@ def del_film(id):
     del films[id]
     return '', 204
 
-
+# 4. Редактирование фильма
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
     if id < 0 or id >= len(films):
@@ -56,11 +68,11 @@ def put_film(id):
     
     film = request.get_json()
     films[id] = film
-    return films[id]
+    return jsonify(films[id])
 
+# 5. Добавление нового фильма
 @lab7.route('/lab7/rest-api/films/', methods=['POST'])
 def add_film():
     film = request.get_json()
     films.append(film)
-    return {"id": len(films) - 1}, 201
-
+    return jsonify({"id": len(films) - 1}), 201
