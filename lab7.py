@@ -40,37 +40,40 @@ films = [
     }
 ]
 
-# 1. Получение всех фильмов
 @lab7.route('/lab7/rest-api/films/', methods=['GET'])
 def get_films():
     return jsonify(films)
 
-# 2. Получение одного фильма
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['GET'])
 def get_film(id):
     if id < 0 or id >= len(films):
-        abort(404, description="Фильм с таким индексом не найден")
+        abort(404)
     return jsonify(films[id])
 
-# 3. Удаление фильма
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['DELETE'])
 def del_film(id):
     if id < 0 or id >= len(films):
-        abort(404, description=f"Фильм с индексом {id} не найден. Невозможно удалить.")
+        abort(404)
     del films[id]
     return '', 204
-
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
     if id < 0 or id >= len(films):
-        abort(404, description=f"Фильм с индексом {id} не найден. Невозможно внести изменения.")
+        abort(404)
     
     film = request.get_json()
     
     # Проверка, что описание не пустое
     if not film.get('description', '').strip():
         return jsonify({"description": "Описание не может быть пустым"}), 400
+    
+    # Улучшенная логика: если русское название есть, а оригинальное пустое или отсутствует - копируем русское в оригинальное
+    title_ru = film.get('title_ru', '')
+    title = film.get('title', '')
+    
+    if title_ru and (not title or title.strip() == ''):
+        film['title'] = title_ru
     
     films[id] = film
     return jsonify(films[id])
@@ -82,6 +85,13 @@ def add_film():
     # Проверка, что описание не пустое
     if not film.get('description', '').strip():
         return jsonify({"description": "Описание не может быть пустым"}), 400
+    
+    # Улучшенная логика: если русское название есть, а оригинальное пустое или отсутствует - копируем русское в оригинальное
+    title_ru = film.get('title_ru', '')
+    title = film.get('title', '')
+    
+    if title_ru and (not title or title.strip() == ''):
+        film['title'] = title_ru
     
     films.append(film)
     return jsonify({"id": len(films) - 1}), 201
