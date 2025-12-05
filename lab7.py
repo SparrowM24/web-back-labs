@@ -39,3 +39,12 @@ def get_film(id):
         abort(404, description="Фильм с таким индексом не найден")
     
     return films[id]
+
+
+@lab7.route('/lab7/rest-api/films/<int:id>', methods=['DELETE'])
+def del_film(id):
+    if id < 0 or id >= len(films):
+        abort(404, description=f"Фильм с индексом {id} не найден. Невозможно удалить.")
+    del films[id]
+    return '', 204
+
