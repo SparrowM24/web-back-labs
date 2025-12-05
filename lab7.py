@@ -52,7 +52,7 @@ def del_film(id):
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
     if id < 0 or id >= len(films):
-        abort(404), description=f"Фильм с индексом {id} не найден. Невозможно внести изменения."
+        abort(404, description=f"Фильм с индексом {id} не найден. Невозможно внести изменения.")
     
     film = request.get_json()
     films[id] = film
