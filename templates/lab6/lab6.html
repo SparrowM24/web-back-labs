@@ -225,10 +225,14 @@
         background-color: #dc3545;
         color: white;
         padding: 10px 20px;
+        text-decoration: none;
+        display: inline-block;
     }
     
     .logout-btn:hover {
         background-color: #c82333;
+        color: white;
+        text-decoration: none;
     }
     
     .refresh-btn {
@@ -478,7 +482,7 @@
             const statusText = isBooked ? 'Забронирован' : 'Свободен';
             const statusClass = isBooked ? 'status-booked' : 'status-free';
             
-            officeCard.innerHTML = `
+            let officeContent = `
                 <div class="office-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
@@ -491,14 +495,21 @@
                     </div>
                 </div>
                 
-                <div class="office-body">
-                    ${isBooked ? 
-                        `<div class="office-tenant">
-                            <strong>👤 Арендатор:</strong> ${office.tenant}
-                        </div>` : 
-                        '<div class="office-tenant" style="color: #28a745;">✅ Офис свободен для бронирования</div>'
-                    }
-                    
+                <div class="office-body">`;
+            
+            if (isBooked) {
+                officeContent += `
+                    <div class="office-tenant">
+                        <strong>👤 Арендатор:</strong> ${office.tenant}
+                    </div>`;
+            } else {
+                officeContent += `
+                    <div class="office-tenant" style="color: #28a745;">
+                        ✅ Офис свободен для бронирования
+                    </div>`;
+            }
+            
+            officeContent += `
                     <div class="office-details">
                         <div class="detail-item">
                             <strong>Номер офиса:</strong> 
@@ -510,25 +521,32 @@
                         </div>
                     </div>
                     
-                    <div class="office-actions">
-                        ${!isBooked ? 
-                            `<button onclick="bookOffice(${office.number})" 
-                                    class="action-btn book-btn">
-                                🏢 Забронировать офис
-                            </button>` : 
-                            isMyBooking ?
-                            `<button onclick="cancelBooking(${office.number})" 
-                                    class="action-btn cancel-btn">
-                                ❌ Отменить бронирование
-                            </button>` :
-                            '<div style="text-align: center; color: #6c757d; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">'
-                                '🚫 Офис занят другим пользователем'
-                            '</div>'
-                        }
-                    </div>
-                </div>
-            `;
+                    <div class="office-actions">`;
             
+            if (!isBooked) {
+                officeContent += `
+                        <button onclick="bookOffice(${office.number})" 
+                                class="action-btn book-btn">
+                            🏢 Забронировать офис
+                        </button>`;
+            } else if (isMyBooking) {
+                officeContent += `
+                        <button onclick="cancelBooking(${office.number})" 
+                                class="action-btn cancel-btn">
+                            ❌ Отменить бронирование
+                        </button>`;
+            } else {
+                officeContent += `
+                        <div style="text-align: center; color: #6c757d; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+                            🚫 Офис занят другим пользователем
+                        </div>`;
+            }
+            
+            officeContent += `
+                    </div>
+                </div>`;
+            
+            officeCard.innerHTML = officeContent;
             grid.appendChild(officeCard);
         });
         
