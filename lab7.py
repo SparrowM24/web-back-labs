@@ -60,19 +60,28 @@ def del_film(id):
     del films[id]
     return '', 204
 
-# 4. Редактирование фильма
+
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
     if id < 0 or id >= len(films):
         abort(404, description=f"Фильм с индексом {id} не найден. Невозможно внести изменения.")
     
     film = request.get_json()
+    
+    # Проверка, что описание не пустое
+    if not film.get('description', '').strip():
+        return jsonify({"description": "Описание не может быть пустым"}), 400
+    
     films[id] = film
     return jsonify(films[id])
 
-# 5. Добавление нового фильма
 @lab7.route('/lab7/rest-api/films/', methods=['POST'])
 def add_film():
     film = request.get_json()
+    
+    # Проверка, что описание не пустое
+    if not film.get('description', '').strip():
+        return jsonify({"description": "Описание не может быть пустым"}), 400
+    
     films.append(film)
     return jsonify({"id": len(films) - 1}), 201
