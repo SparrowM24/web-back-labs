@@ -148,7 +148,6 @@ function saveFilm() {
     }
     
     if (currentFilmId === null) {
-        // Добавление нового фильма
         fetch('/lab7/rest-api/films/', {
             method: 'POST',
             headers: {
@@ -163,7 +162,6 @@ function saveFilm() {
             }
         });
     } else {
-        // Редактирование существующего фильма
         fetch(`/lab7/rest-api/films/${currentFilmId}`, {
             method: 'PUT',
             headers: {

@@ -4,7 +4,6 @@
 
 {% block main %}
     <style>
-        /* Стили для модального окна */
         .modal {
             display: none;
             position: fixed;
@@ -32,7 +31,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
-        /* Остальные стили остаются как были */
         .modal label {
             display: block;
             margin: 10px 0 5px;
@@ -53,8 +51,6 @@
             margin-top: 15px;
             text-align: right;
         }
-        
-        /* Стили для таблицы */
         table {
             border-collapse: collapse;
             width: 100%;
@@ -72,7 +68,6 @@
         }
     </style>
     
-    <!-- Остальной HTML код без изменений -->
     <h1>Список фильмов</h1>
     
     <table>
@@ -86,7 +81,6 @@
             </tr>
         </thead>
         <tbody id="film-list">
-            <!-- Фильмы будут добавляться через JS -->
         </tbody>
     </table>
     
@@ -94,7 +88,6 @@
         <button onclick="addFilm()">Добавить фильм</button>
     </div>
 
-    <!-- Модальное окно для добавления/редактирования -->
     <div id="filmModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Добавить фильм</h2>
