@@ -39,7 +39,8 @@ function fillFilmList() {
                 let delButton = document.createElement('button');
                 delButton.innerText = 'удалить';
                 delButton.onclick = function() {
-                    deleteFilm(i);
+                    let filmTitle = films[i].title_ru || films[i].title || 'фильм';
+                    deleteFilm(i, filmTitle);
                 };
 
                 tdActions.append(editButton);
@@ -63,25 +64,19 @@ function fillFilmList() {
         });
 }
 
-// Функция удаления фильма
-async function deleteFilm(id) {
-    if (!confirm('Вы уверены, что хотите удалить фильм?')) {
+function deleteFilm(id, title) {
+    if(! confirm('Вы точно хотите удалить фильм "' + title + '"?'))
         return;
-    }
-    
-    try {
-        const response = await fetch(`/lab7/rest-api/films/${id}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            fillFilmList(); // Обновляем список
-        }
-    } catch (error) {
-        console.error('Ошибка при удалении:', error);
-        alert('Ошибка при удалении фильма');
-    }
+
+    fetch('/lab7/rest-api/films/' + id, {method: 'DELETE'})
+    .then(function () {
+        fillFilmList();
+    });
 }
+
+
+
+
 
 // Функция редактирования фильма (заглушка)
 function editFilm(id) {
