@@ -1,62 +1,41 @@
 from flask import Blueprint, render_template, request, abort, jsonify
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import DictCursor
 
 lab7 = Blueprint('lab7', __name__)
 
-@lab7.route('/lab7/')
-def main():
-    return render_template('lab7/lab7.html')
+# ========== ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ ==========
 
-# Начальный список фильмов (5 штук как в задании)
-films = [
-    {
-        "title": "The Shawshank Redemption",
-        "title_ru": "Побег из Шоушенка",
-        "year": 1994,
-        "description": "Два заключенных создают крепкую дружбу, чтобы выжить в тюрьме, обретая искупление через действия простой доброты."
-    },
-    {
-        "title": "The Godfather",
-        "title_ru": "Крестный отец",
-        "year": 1972,
-        "description": "Стареющий патриарх организованной преступной династии передает контроль над своей подпольной империей своему неохотному сыну."
-    },
-    {
-        "title": "The Dark Knight",
-        "title_ru": "Темный рыцарь",
-        "year": 2008,
-        "description": "Когда в Готэм-Сити появляется угроза, известная как Джокер, Бэтмен должен противостоять хаосу, который тот сеет."
-    },
-    {
-        "title": "Pulp Fiction",
-        "title_ru": "Криминальное чтиво",
-        "year": 1994,
-        "description": "Жизни двух киллеров, боксера, гангстера и его жены переплетаются в четырех историях о насилии и искуплении."
-    },
-    {
-        "title": "Forrest Gump",
-        "title_ru": "Форрест Гамп",
-        "year": 1994,
-        "description": "История жизни Форреста Гампа, человека с низким IQ, который невольно становится свидетелем и участником ключевых исторических событий США."
-    }
-]
+def get_db_connection():
+    """Подключение к PostgreSQL на порту 5433"""
+    conn = psycopg2.connect(
+        host='127.0.0.1',
+        port=5433,  # ПОРТ 5433 для KOMPAS-3D
+        database='alice_dyachkova_knowledge_base2',
+        user='alice_dyachkova_knowledge_base',
+        password='123456',
+        cursor_factory=DictCursor
+    )
+    return conn
+
+# ========== ВАЛИДАЦИЯ ==========
 
 def validate_film(film):
     """Валидация данных фильма"""
     errors = {}
     
-    # 1. Русское название — должно быть непустым
+    # Русское название
     title_ru = film.get('title_ru', '').strip()
     if not title_ru:
         errors['title_ru'] = 'Русское название обязательно'
     
-    # 2. Оригинальное название — должно быть непустым, если русское пустое
-    # (но мы уже проверили что русское не пустое, так что эта проверка вторична)
+    # Оригинальное название
     title = film.get('title', '').strip()
     if not title_ru and not title:
         errors['title'] = 'Хотя бы одно название должно быть заполнено'
     
-    # 3. Год — должен быть от 1895 до текущего
+    # Год
     try:
         year = int(film.get('year', 0))
         current_year = datetime.now().year
@@ -65,7 +44,7 @@ def validate_film(film):
     except (ValueError, TypeError):
         errors['year'] = 'Год должен быть числом'
     
-    # 4. Описание — должно быть непустым, но не более 2000 символов
+    # Описание
     description = film.get('description', '').strip()
     if not description:
         errors['description'] = 'Описание обязательно'
@@ -74,60 +53,225 @@ def validate_film(film):
     
     return errors
 
+# ========== API МАРШРУТЫ ==========
+
+@lab7.route('/lab7/')
+def main():
+    """Главная страница"""
+    return render_template('lab7/lab7.html')
+
 @lab7.route('/lab7/rest-api/films/', methods=['GET'])
 def get_films():
-    return jsonify(films)
+    """Получить все фильмы"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id, title, title_ru, year, description FROM films ORDER BY id")
+        
+        films = []
+        for row in cursor.fetchall():
+            films.append({
+                'id': row['id'] - 1,  # Преобразуем ID для фронтенда
+                'title': row['title'],
+                'title_ru': row['title_ru'],
+                'year': row['year'],
+                'description': row['description']
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(films)
+        
+    except Exception as e:
+        print(f"Ошибка при загрузке фильмов: {e}")
+        return jsonify({'error': 'Ошибка сервера'}), 500
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['GET'])
 def get_film(id):
-    if id < 0 or id >= len(films):
-        abort(404)
-    return jsonify(films[id])
+    """Получить один фильм по ID"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        db_id = id + 1  # Преобразуем ID
+        
+        cursor.execute("SELECT id, title, title_ru, year, description FROM films WHERE id = %s", (db_id,))
+        row = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if not row:
+            abort(404)
+        
+        return jsonify({
+            'id': id,
+            'title': row['title'],
+            'title_ru': row['title_ru'],
+            'year': row['year'],
+            'description': row['description']
+        })
+        
+    except Exception as e:
+        print(f"Ошибка при получении фильма: {e}")
+        return jsonify({'error': 'Ошибка сервера'}), 500
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['DELETE'])
 def del_film(id):
-    if id < 0 or id >= len(films):
-        abort(404)
-    del films[id]
-    return '', 204
+    """Удалить фильм"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        db_id = id + 1
+        
+        cursor.execute("SELECT id FROM films WHERE id = %s", (db_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conn.close()
+            abort(404)
+        
+        cursor.execute("DELETE FROM films WHERE id = %s", (db_id,))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        return '', 204
+        
+    except Exception as e:
+        print(f"Ошибка при удалении фильма: {e}")
+        return jsonify({'error': 'Ошибка сервера'}), 500
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
-    if id < 0 or id >= len(films):
-        abort(404)
-    
-    film = request.get_json()
-    
-    # Валидация данных
-    errors = validate_film(film)
-    if errors:
-        return jsonify(errors), 400
-    
-    # Если русское название есть, а оригинальное пустое - копируем русское в оригинальное
-    title_ru = film.get('title_ru', '').strip()
-    title = film.get('title', '').strip()
-    
-    if title_ru and (not title or title.strip() == ''):
-        film['title'] = title_ru
-    
-    films[id] = film
-    return jsonify(films[id])
+    """Обновить фильм"""
+    try:
+        film = request.get_json()
+        
+        # Валидация
+        errors = validate_film(film)
+        if errors:
+            return jsonify(errors), 400
+        
+        # Подготовка данных
+        title_ru = film.get('title_ru', '').strip()
+        title = film.get('title', '').strip()
+        
+        if title_ru and not title:
+            title = title_ru
+        
+        description = film.get('description', '').strip()
+        year = int(film.get('year', 0))
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        db_id = id + 1
+        
+        # Проверяем существование
+        cursor.execute("SELECT id FROM films WHERE id = %s", (db_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conn.close()
+            abort(404)
+        
+        # Обновляем
+        cursor.execute("""
+            UPDATE films 
+            SET title = %s, title_ru = %s, year = %s, description = %s 
+            WHERE id = %s 
+            RETURNING id, title, title_ru, year, description
+        """, (title, title_ru, year, description, db_id))
+        
+        updated_row = cursor.fetchone()
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'id': id,
+            'title': updated_row['title'],
+            'title_ru': updated_row['title_ru'],
+            'year': updated_row['year'],
+            'description': updated_row['description']
+        })
+        
+    except Exception as e:
+        print(f"Ошибка при обновлении фильма: {e}")
+        return jsonify({'error': 'Ошибка сервера'}), 500
 
 @lab7.route('/lab7/rest-api/films/', methods=['POST'])
 def add_film():
-    film = request.get_json()
-    
-    # Валидация данных
-    errors = validate_film(film)
-    if errors:
-        return jsonify(errors), 400
-    
-    # Если русское название есть, а оригинальное пустое - копируем русское в оригинальное
-    title_ru = film.get('title_ru', '').strip()
-    title = film.get('title', '').strip()
-    
-    if title_ru and (not title or title.strip() == ''):
-        film['title'] = title_ru
-    
-    films.append(film)
-    return jsonify({"id": len(films) - 1}), 201
+    """Добавить новый фильм"""
+    try:
+        film = request.get_json()
+        
+        # Валидация
+        errors = validate_film(film)
+        if errors:
+            return jsonify(errors), 400
+        
+        # Подготовка данных
+        title_ru = film.get('title_ru', '').strip()
+        title = film.get('title', '').strip()
+        
+        if title_ru and not title:
+            title = title_ru
+        
+        description = film.get('description', '').strip()
+        year = int(film.get('year', 0))
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Добавляем
+        cursor.execute("""
+            INSERT INTO films (title, title_ru, year, description) 
+            VALUES (%s, %s, %s, %s) 
+            RETURNING id
+        """, (title, title_ru, year, description))
+        
+        new_id = cursor.fetchone()[0]
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"id": new_id - 1}), 201
+        
+    except Exception as e:
+        print(f"Ошибка при добавлении фильма: {e}")
+        return jsonify({'error': 'Ошибка сервера'}), 500
+
+@lab7.route('/lab7/db-check/')
+def db_check():
+    """Проверка подключения к БД"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM films")
+        count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT version()")
+        version = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'status': 'ok',
+            'film_count': count,
+            'postgres_version': version,
+            'message': f'База данных подключена, фильмов: {count}'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
