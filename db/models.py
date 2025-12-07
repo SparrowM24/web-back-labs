@@ -1,5 +1,6 @@
 # models.py
 from . import db
+from flask_login import UserMixin
 
 class users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
