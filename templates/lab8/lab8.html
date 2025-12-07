@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 8{% endblock %}
+
+{% block main %}
+    <div class="lab8-container">
+        <h1>🖋️ Система управления статьями</h1>
+        
+        <!-- Информация о пользователе -->
+        <div class="user-info-section">
+            {% if username != "anonymous" %}
+                <div class="user-card">
+                    <div class="user-header">
+                        <span class="user-icon">👤</span>
+                        <h3>Привет, {{ username }}!</h3>
+                    </div>
+                    <div class="user-actions">
+                        <a href="/lab8/logout" class="btn-user-action btn-logout">🚪 Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="anonymous-card">
+                    <span class="anonymous-icon">👥</span>
+                    <div class="anonymous-text">
+                        <h3>Вы не авторизованы</h3>
+                        <p>Войдите в систему, чтобы создавать и управлять статьями</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Основные разделы -->
+        <h2>Основные разделы:</h2>
+
+        <div class="button-grid">
+            {% if username == "anonymous" %}
+                <!-- Для неавторизованных пользователей -->
+                <a href="/lab8/login" class="nav-button">
+                    <div class="button-content">
+                        <span class="button-icon">🔐</span>
+                        <div class="button-text">
+                            <div class="button-title">Вход в систему</div>
+                            <div class="button-desc">Авторизация в системе</div>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="/lab8/register" class="nav-button">
+                    <div class="button-content">
+                        <span class="button-icon">📝</span>
+                        <div class="button-text">
+                            <div class="button-title">Регистрация</div>
+                            <div class="button-desc">Создание нового аккаунта</div>
+                        </div>
+                    </div>
+                </a>
+            {% else %}
+                <!-- Для авторизованных пользователей -->
+                <a href="/lab8/create" class="nav-button">
+                    <div class="button-content">
+                        <span class="button-icon">✏️</span>
+                        <div class="button-text">
+                            <div class="button-title">Создать статью</div>
+                            <div class="button-desc">Написание новой статьи</div>
+                        </div>
+                    </div>
+                </a>
+            {% endif %}
+
+            <!-- Общие разделы для всех -->
+            <a href="/lab8/articles" class="nav-button">
+                <div class="button-content">
+                    <span class="button-icon">📄</span>
+                    <div class="button-text">
+                        <div class="button-title">Список статей</div>
+                        <div class="button-desc">Просмотр всех доступных статей</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Ссылки навигации -->
+        <div class="menu-links">
+            <a href="/" class="back-button">🏠 На главную</a>
+        </div>
+    </div>
+
+    <style>
+        .lab8-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .user-info-section {
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-icon {
+            font-size: 40px;
+        }
+
+        .user-card h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-user-action {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-user-action:hover {
+            background: rgba(255, 255, 255, 0.3);
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+
+        .btn-logout {
+            background: rgba(231, 76, 60, 0.8);
+        }
+
+        .btn-logout:hover {
+            background: rgba(231, 76, 60, 1);
+        }
+
+        .anonymous-card {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .anonymous-icon {
+            font-size: 40px;
+            color: #6c757d;
+        }
+
+        .anonymous-text h3 {
+            margin: 0 0 5px 0;
+            color: #495057;
+        }
+
+        .anonymous-text p {
+            margin: 0;
+            color: #6c757d;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .nav-button {
+            display: block;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #667eea;
+            text-decoration: none;
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            padding: 25px 20px;
+        }
+
+        .button-icon {
+            font-size: 32px;
+            margin-right: 20px;
+            width: 40px;
+            text-align: center;
+            color: #667eea;
+        }
+
+        .button-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .button-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .button-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .menu-links {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .back-button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .back-button:hover {
+            background: #5a6fd8;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-card {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .user-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .menu-links {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .back-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+{% endblock %}
