@@ -1,23 +1,31 @@
 from flask import Blueprint, render_template, request, abort, jsonify
 from datetime import datetime
-import psycopg2
-from psycopg2.extras import DictCursor
+import os
+
+# Пытаемся импортировать универсальную функцию подключения
+try:
+    from database.connection import get_db_connection
+except ImportError:
+    # Fallback: импортируем напрямую PostgreSQL
+    import psycopg2
+    from psycopg2.extras import DictCursor
+    
+    def get_db_connection():
+        """
+        Подключение к PostgreSQL (локальная разработка)
+        ВАЖНО: Эти значения используются только для локальной разработки!
+        Для продакшена используйте переменные окружения.
+        """
+        return psycopg2.connect(
+            host='127.0.0.1',
+            port=5433,  # Порт KOMPAS-3D
+            database='alice_dyachkova_knowledge_base2',
+            user='alice_dyachkova_knowledge_base',
+            password='123456',
+            cursor_factory=DictCursor
+        )
 
 lab7 = Blueprint('lab7', __name__)
-
-# ========== ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ ==========
-
-def get_db_connection():
-    """Подключение к PostgreSQL на порту 5433"""
-    conn = psycopg2.connect(
-        host='127.0.0.1',
-        port=5433,  # ПОРТ 5433 для KOMPAS-3D
-        database='alice_dyachkova_knowledge_base2',
-        user='alice_dyachkova_knowledge_base',
-        password='123456',
-        cursor_factory=DictCursor
-    )
-    return conn
 
 # ========== ВАЛИДАЦИЯ ==========
 

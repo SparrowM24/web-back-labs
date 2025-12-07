@@ -1,4 +1,31 @@
-venv
+# Python
 __pycache__/
+*.pyc
+venv/
 .env
-database.db
+.env.local
+*.db
+*.log
+*.pyo
+*.pyd
+
+# Flask
+instance/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PostgreSQL data
+/data/
+/pgdata/
+
+# SQLite
+films.db
+test.db
