@@ -3,5 +3,28 @@
 {% block lab %}Лабораторная работа 8{% endblock %}
 
 {% block main %}
+<h1>Регистрация</h1>
+
+<!-- Вывод сообщения об ошибке, если оно есть -->
+{% if error %}
+<div class="error-message" style="color: red; padding: 10px; border: 1px solid red; margin-bottom: 15px;">
+    {{ error }}
+</div>
+{% endif %}
+
+<form action="/lab8/register" method="post">
+    <div>
+        <label>
+            Логин: <input type="text" name="login">
+        </label>
+    </div>
     
+    <div>
+        <label>
+            Пароль: <input type="password" name="password">
+        </label>
+    </div>
+    
+    <button type="submit">Зарегистрироваться</button>
+</form>
 {% endblock %}
