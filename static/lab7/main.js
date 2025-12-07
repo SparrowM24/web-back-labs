@@ -20,6 +20,8 @@ function fillFilmList() {
             for(let i = 0; i < films.length; i++) {
                 let film = films[i];
                 
+                console.log(`Фильм ${i}: ID=${film.id}, Название="${film.title_ru}"`);
+                
                 let tr = document.createElement('tr');
                 
                 // 1. РУССКОЕ НАЗВАНИЕ
@@ -52,19 +54,21 @@ function fillFilmList() {
                 }
                 tdDescription.textContent = description;
                 
-                // 5. Кнопки
+                // 5. Кнопки - ИСПРАВЛЕНО: используем film.id вместо i
                 let tdActions = document.createElement('td');
                 
                 let editButton = document.createElement('button');
                 editButton.textContent = 'редактировать';
                 editButton.onclick = function() {
-                    editFilm(i, film);
+                    console.log(`Редактировать фильм с ID=${film.id}`);
+                    editFilm(film.id, film);  // <- ИСПРАВЛЕНО: film.id
                 };
 
                 let delButton = document.createElement('button');
                 delButton.textContent = 'удалить';
                 delButton.onclick = function() {
-                    deleteFilm(i, film.title_ru || film.title || 'фильм');
+                    console.log(`Удалить фильм с ID=${film.id}`);
+                    deleteFilm(film.id, film.title_ru || film.title || 'фильм');  // <- ИСПРАВЛЕНО: film.id
                 };
 
                 tdActions.appendChild(editButton);
@@ -88,15 +92,46 @@ function fillFilmList() {
         });
 }
 
-// Функция удаления фильма
+// Функция удаления фильма - добавьте логирование
 function deleteFilm(id, title) {
+    console.log(`Попытка удаления: ID=${id}, Название="${title}"`);
+    
     if(! confirm('Вы точно хотите удалить фильм "' + title + '"?'))
         return;
 
     fetch('/lab7/rest-api/films/' + id, {method: 'DELETE'})
-    .then(function() {
-        fillFilmList();
+    .then(function(response) {
+        console.log(`Статус ответа: ${response.status}`);
+        if (response.status === 204) {
+            console.log('Фильм успешно удален');
+            fillFilmList();
+        } else if (response.status === 404) {
+            alert('Фильм не найден! Возможно он уже был удален.');
+            fillFilmList(); // Обновляем список
+        } else {
+            console.error('Ошибка при удалении:', response.status);
+            alert('Ошибка при удалении фильма');
+        }
+    })
+    .catch(function(error) {
+        console.error('Ошибка при удалении:', error);
+        alert('Ошибка при удалении фильма: ' + error);
     });
+}
+
+// Функция редактирования фильма - тоже исправляем
+function editFilm(id, film) {
+    console.log(`Редактирование фильма с ID=${id}`);
+    currentFilmId = id;  // Используем реальный ID
+    
+    document.getElementById('title_ru').value = film.title_ru || '';
+    document.getElementById('title').value = film.title || '';
+    document.getElementById('year').value = film.year || '';
+    document.getElementById('description').value = film.description || '';
+    
+    clearError();
+    document.getElementById('modalTitle').textContent = 'Редактировать фильм';
+    showModal();
 }
 
 // Очистить сообщение об ошибке
@@ -153,20 +188,6 @@ function addFilm() {
     showModal();
 }
 
-// Редактировать фильм
-function editFilm(id, film) {
-    currentFilmId = id;
-    
-    document.getElementById('title_ru').value = film.title_ru || '';
-    document.getElementById('title').value = film.title || '';
-    document.getElementById('year').value = film.year || '';
-    document.getElementById('description').value = film.description || '';
-    
-    clearError();
-    document.getElementById('modalTitle').textContent = 'Редактировать фильм';
-    showModal();
-}
-
 // Сохранить фильм
 function saveFilm() {
     let filmData = {
@@ -175,6 +196,9 @@ function saveFilm() {
         year: parseInt(document.getElementById('year').value) || 0,
         description: document.getElementById('description').value.trim()
     };
+    
+    console.log('Сохранение фильма:', filmData);
+    console.log('Текущий ID:', currentFilmId);
     
     clearError();
     
@@ -188,6 +212,8 @@ function saveFilm() {
         method = 'PUT';
     }
     
+    console.log(`Отправка запроса: ${method} ${url}`);
+    
     fetch(url, {
         method: method,
         headers: {
@@ -196,6 +222,7 @@ function saveFilm() {
         body: JSON.stringify(filmData)
     })
     .then(function(response) {
+        console.log('Ответ сервера:', response.status);
         if (response.ok) {
             return {};
         } else {
@@ -204,6 +231,7 @@ function saveFilm() {
     })
     .then(function(data) {
         if (Object.keys(data).length > 0) {
+            console.log('Ошибки валидации:', data);
             // Показываем все ошибки
             let errorMessages = [];
             if (data.title_ru) errorMessages.push(data.title_ru);
@@ -213,6 +241,7 @@ function saveFilm() {
             
             showError(errorMessages.join('<br>'));
         } else {
+            console.log('Сохранение успешно');
             hideModal();
             fillFilmList();
         }
@@ -223,7 +252,22 @@ function saveFilm() {
     });
 }
 
+// Добавьте функцию для проверки базы данных
+function checkDatabase() {
+    fetch('/lab7/rest-api/films/')
+        .then(response => response.json())
+        .then(films => {
+            console.log('Проверка базы:', films);
+            alert(`В базе ${films.length} фильмов:\n${films.map(f => `ID=${f.id}: ${f.title_ru}`).join('\n')}`);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при проверке базы');
+        });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница загружена');
     fillFilmList();
     
     window.onclick = function(event) {

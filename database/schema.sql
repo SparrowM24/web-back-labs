@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS films (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
-    title_ru VARCHAR(255) NOT NULL,
-    year INTEGER NOT NULL CHECK (year >= 1895),
-    description TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
