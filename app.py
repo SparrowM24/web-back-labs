@@ -31,41 +31,35 @@ def load_users(login_id):
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'секретно секретный-секрет')
 
-# ВАЖНО: На PythonAnywhere бесплатной версии используем ТОЛЬКО SQLite
-# Изменяем значение по умолчанию на 'sqlite'
-app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'sqlite')  # ← ИЗМЕНЕНО: было 'postgres', стало 'sqlite'
-
-if app.config['DB_TYPE'] == 'postgres':
-    db_name = 'alice_dyachkova_orm'
-    db_user = 'alice_dyachkova_orm'
-    db_password = '123'
-    host_ip = '127.0.0.1'
-    host_port = 5432
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = \
-        f'postgresql://{db_user}:{db_password}@{host_ip}:{host_port}/{db_name}'
-
-else:
-    dir_path = path.dirname(path.realpath(__file__))
-    db_path = path.join(dir_path, "database.db")  # ← ИЗМЕНЕНО: было "alice_dyachkova_orm.db"
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-
+# ТОЛЬКО SQLite для PythonAnywhere
+dir_path = path.dirname(path.realpath(__file__))
+db_path = path.join(dir_path, "database.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+print(f"=== DEBUG: Используем БД: {app.config['SQLALCHEMY_DATABASE_URI']} ===")
 
 db.init_app(app)
 
 # Создаем таблицы при запуске
 with app.app_context():
     try:
+        from db.models import users, articles
         db.create_all()
         print("✅ Таблицы базы данных созданы/проверены")
         
         # Проверяем подключение
-        from db.models import users
         count = users.query.count()
         print(f"✅ В базе {count} пользователей")
+        
+        # Проверяем статьи
+        articles_count = articles.query.count()
+        print(f"✅ В базе {articles_count} статей")
+        
     except Exception as e:
         print(f"❌ Ошибка при создании таблиц: {e}")
+        import traceback
+        print(f"❌ Трассировка: {traceback.format_exc()}")
 
 app.register_blueprint(lab1)
 app.register_blueprint(lab2)
