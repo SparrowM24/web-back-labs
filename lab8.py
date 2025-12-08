@@ -8,6 +8,16 @@ from sqlalchemy import or_, func
 # Blueprint с правильным именем
 lab8_bp = Blueprint('lab8_bp', __name__)
 
+# Вспомогательная функция для регистронезависимого поиска
+def case_insensitive_like(column, pattern):
+    """
+    Универсальная функция для регистронезависимого поиска.
+    Работает как с SQLite, так и с другими базами данных.
+    """
+    # Для SQLite используем func.lower() для регистронезависимости
+    # Для других баз данных можно использовать ilike() если он работает
+    return func.lower(column).contains(func.lower(pattern))
+
 # Главная страница лабораторной 8
 @lab8_bp.route('/lab8/')
 def lab8_index():
@@ -90,7 +100,7 @@ def logout():
     session.clear()
     return redirect('/lab8/')
 
-# Список статей с поиском (ОБНОВЛЕНО для дополнительного задания)
+# Список статей с поиском (ОБНОВЛЕНО с исправленным поиском)
 @lab8_bp.route('/lab8/articles/')
 def article_list():
     """Список статей с поиском - доступен всем пользователям"""
@@ -116,21 +126,19 @@ def article_list():
         
         # Если есть поисковый запрос - фильтруем (регистронезависимый поиск)
         if search_query:
-            search_pattern = f"%{search_query}%"
-            
-            # Поиск в своих статьях
+            # Поиск в своих статьях (используем нашу функцию для регистронезависимого поиска)
             user_query = user_query.filter(
                 or_(
-                    articles.title.ilike(search_pattern),
-                    articles.article_text.ilike(search_pattern)
+                    case_insensitive_like(articles.title, search_query),
+                    case_insensitive_like(articles.article_text, search_query)
                 )
             )
             
             # Поиск в публичных статьях других
             public_query = public_query.filter(
                 or_(
-                    articles.title.ilike(search_pattern),
-                    articles.article_text.ilike(search_pattern)
+                    case_insensitive_like(articles.title, search_query),
+                    case_insensitive_like(articles.article_text, search_query)
                 )
             )
             
@@ -145,11 +153,11 @@ def article_list():
         public_query = articles.query.filter_by(is_public=True)
         
         if search_query:
-            search_pattern = f"%{search_query}%"
+            # Регистронезависимый поиск
             public_query = public_query.filter(
                 or_(
-                    articles.title.ilike(search_pattern),
-                    articles.article_text.ilike(search_pattern)
+                    case_insensitive_like(articles.title, search_query),
+                    case_insensitive_like(articles.article_text, search_query)
                 )
             )
             search_results_count = public_query.count()
@@ -170,7 +178,7 @@ def article_list():
                           get_author_name=get_author_name,
                           current_user=current_user)
 
-# Просмотр отдельной статьи (НОВАЯ функция)
+# Просмотр отдельной статьи
 @lab8_bp.route('/lab8/article/<int:article_id>/')
 def view_article(article_id):
     """Просмотр статьи - доступна публичная или своя"""
@@ -268,7 +276,7 @@ def delete_article(article_id):
     
     return redirect('/lab8/articles/')
 
-# Лайк статьи (НОВАЯ функция)
+# Лайк статьи
 @lab8_bp.route('/lab8/like_article/<int:article_id>/', methods=['POST'])
 @login_required
 def like_article(article_id):
@@ -283,7 +291,7 @@ def like_article(article_id):
     
     return redirect(f'/lab8/article/{article_id}/')
 
-# Быстрый поиск (НОВАЯ функция)
+# Быстрый поиск (ОБНОВЛЕНО с исправленным поиском)
 @lab8_bp.route('/lab8/quick_search/', methods=['GET'])
 def quick_search():
     """Быстрый поиск статей"""
@@ -291,8 +299,6 @@ def quick_search():
     
     if not search_query:
         return jsonify({'error': 'Введите поисковый запрос'}), 400
-    
-    search_pattern = f"%{search_query}%"
     
     results = []
     
@@ -302,8 +308,8 @@ def quick_search():
         my_articles = articles.query.filter(
             articles.login_id == current_user.id,
             or_(
-                articles.title.ilike(search_pattern),
-                articles.article_text.ilike(search_pattern)
+                case_insensitive_like(articles.title, search_query),
+                case_insensitive_like(articles.article_text, search_query)
             )
         ).limit(5).all()
         
@@ -312,8 +318,8 @@ def quick_search():
             articles.is_public == True,
             articles.login_id != current_user.id,
             or_(
-                articles.title.ilike(search_pattern),
-                articles.article_text.ilike(search_pattern)
+                case_insensitive_like(articles.title, search_query),
+                case_insensitive_like(articles.article_text, search_query)
             )
         ).limit(5).all()
         
@@ -333,8 +339,8 @@ def quick_search():
         public_articles = articles.query.filter(
             articles.is_public == True,
             or_(
-                articles.title.ilike(search_pattern),
-                articles.article_text.ilike(search_pattern)
+                case_insensitive_like(articles.title, search_query),
+                case_insensitive_like(articles.article_text, search_query)
             )
         ).limit(10).all()
         
