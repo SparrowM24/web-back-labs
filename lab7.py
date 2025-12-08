@@ -1,42 +1,19 @@
 from flask import Blueprint, render_template, request, abort, jsonify, current_app
 from datetime import datetime
-import psycopg2
-from psycopg2.extras import DictCursor
 import sqlite3
 from os import path
 
 lab7 = Blueprint('lab7', __name__)
 
-# ========== УНИВЕРСАЛЬНОЕ ПОДКЛЮЧЕНИЕ К БАЗЕ ==========
+# ========== ПОДКЛЮЧЕНИЕ К БАЗЕ (ТОЛЬКО SQLite) ==========
 
 def db_connect():
-    """Универсальное подключение к базе данных"""
-    if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-        # PostgreSQL (для локальной разработки с KOMPAS-3D)
-        try:
-            conn = psycopg2.connect(
-                host='127.0.0.1',
-                port=5433,
-                database='alice_dyachkova_knowledge_base2',
-                user='alice_dyachkova_knowledge_base',
-                password='123456',
-                cursor_factory=DictCursor
-            )
-            cur = conn.cursor()
-            return conn, cur
-        except Exception as e:
-            print(f"Ошибка подключения к PostgreSQL: {e}")
-            # Fallback на SQLite если PostgreSQL не доступен
-            print("Используем SQLite как fallback...")
-            current_app.config['DB_TYPE'] = 'sqlite'
-    
-    # SQLite (для PythonAnywhere или как fallback)
+    """Подключение к SQLite"""
     dir_path = path.dirname(path.realpath(__file__))
     db_path = path.join(dir_path, "films.db")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
-    
     return conn, cur
 
 def db_close(conn, cur):
@@ -52,52 +29,29 @@ def init_database():
     conn, cur = db_connect()
     
     try:
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS films (
-                    id SERIAL PRIMARY KEY,
-                    title VARCHAR(255),
-                    title_ru VARCHAR(255) NOT NULL,
-                    year INTEGER NOT NULL,
-                    description TEXT NOT NULL
-                )
-            """)
-        else:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS films (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT,
-                    title_ru TEXT NOT NULL,
-                    year INTEGER NOT NULL,
-                    description TEXT NOT NULL
-                )
-            """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS films (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                title_ru TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                description TEXT NOT NULL
+            )
+        """)
         
         # Проверяем есть ли данные
         cur.execute("SELECT COUNT(*) FROM films")
         count = cur.fetchone()[0]
         
         if count == 0:
-            if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-                cur.execute("""
-                    INSERT INTO films (title, title_ru, year, description) 
-                    VALUES (%s, %s, %s, %s),
-                           (%s, %s, %s, %s),
-                           (%s, %s, %s, %s)
-                """, (
-                    'The Matrix', 'Матрица', 1999, 'Хакер Нео узнает, что его мир — виртуальная реальность.',
-                    'Inception', 'Начало', 2010, 'Вор идей пытается внедрить мысль в подсознание.',
-                    'Interstellar', 'Интерстеллар', 2014, 'Путешествие через червоточину.'
-                ))
-            else:
-                cur.executemany("""
-                    INSERT INTO films (title, title_ru, year, description) 
-                    VALUES (?, ?, ?, ?)
-                """, [
-                    ('The Matrix', 'Матрица', 1999, 'Хакер Нео узнает, что его мир — виртуальная реальность.'),
-                    ('Inception', 'Начало', 2010, 'Вор идей пытается внедрить мысль в подсознание.'),
-                    ('Interstellar', 'Интерстеллар', 2014, 'Путешествие через червоточину.')
-                ])
+            cur.executemany("""
+                INSERT INTO films (title, title_ru, year, description) 
+                VALUES (?, ?, ?, ?)
+            """, [
+                ('The Matrix', 'Матрица', 1999, 'Хакер Нео узнает, что его мир — виртуальная реальность.'),
+                ('Inception', 'Начало', 2010, 'Вор идей пытается внедрить мысль в подсознание.'),
+                ('Interstellar', 'Интерстеллар', 2014, 'Путешествие через червоточину.')
+            ])
     finally:
         db_close(conn, cur)
 
@@ -185,10 +139,7 @@ def get_film(id):
         
         db_id = id + 1  # Преобразуем ID
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("SELECT id, title, title_ru, year, description FROM films WHERE id = %s", (db_id,))
-        else:
-            cur.execute("SELECT id, title, title_ru, year, description FROM films WHERE id = ?", (db_id,))
+        cur.execute("SELECT id, title, title_ru, year, description FROM films WHERE id = ?", (db_id,))
         
         row = cur.fetchone()
         
@@ -217,19 +168,13 @@ def del_film(id):
         
         db_id = id + 1
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("SELECT id FROM films WHERE id = %s", (db_id,))
-        else:
-            cur.execute("SELECT id FROM films WHERE id = ?", (db_id,))
+        cur.execute("SELECT id FROM films WHERE id = ?", (db_id,))
         
         if not cur.fetchone():
             db_close(conn, cur)
             abort(404)
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("DELETE FROM films WHERE id = %s", (db_id,))
-        else:
-            cur.execute("DELETE FROM films WHERE id = ?", (db_id,))
+        cur.execute("DELETE FROM films WHERE id = ?", (db_id,))
         
         db_close(conn, cur)
         
@@ -264,34 +209,21 @@ def put_film(id):
         
         db_id = id + 1
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("SELECT id FROM films WHERE id = %s", (db_id,))
-        else:
-            cur.execute("SELECT id FROM films WHERE id = ?", (db_id,))
+        cur.execute("SELECT id FROM films WHERE id = ?", (db_id,))
         
         if not cur.fetchone():
             db_close(conn, cur)
             abort(404)
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("""
-                UPDATE films 
-                SET title = %s, title_ru = %s, year = %s, description = %s 
-                WHERE id = %s 
-                RETURNING id, title, title_ru, year, description
-            """, (title, title_ru, year, description, db_id))
-            
-            updated_row = cur.fetchone()
-        else:
-            cur.execute("""
-                UPDATE films 
-                SET title = ?, title_ru = ?, year = ?, description = ? 
-                WHERE id = ?
-            """, (title, title_ru, year, description, db_id))
-            
-            # Получаем обновленную запись
-            cur.execute("SELECT id, title, title_ru, year, description FROM films WHERE id = ?", (db_id,))
-            updated_row = cur.fetchone()
+        cur.execute("""
+            UPDATE films 
+            SET title = ?, title_ru = ?, year = ?, description = ? 
+            WHERE id = ?
+        """, (title, title_ru, year, description, db_id))
+        
+        # Получаем обновленную запись
+        cur.execute("SELECT id, title, title_ru, year, description FROM films WHERE id = ?", (db_id,))
+        updated_row = cur.fetchone()
         
         db_close(conn, cur)
         
@@ -330,21 +262,12 @@ def add_film():
         
         conn, cur = db_connect()
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("""
-                INSERT INTO films (title, title_ru, year, description) 
-                VALUES (%s, %s, %s, %s) 
-                RETURNING id
-            """, (title, title_ru, year, description))
-            
-            new_id = cur.fetchone()[0]
-        else:
-            cur.execute("""
-                INSERT INTO films (title, title_ru, year, description) 
-                VALUES (?, ?, ?, ?)
-            """, (title, title_ru, year, description))
-            
-            new_id = cur.lastrowid
+        cur.execute("""
+            INSERT INTO films (title, title_ru, year, description) 
+            VALUES (?, ?, ?, ?)
+        """, (title, title_ru, year, description))
+        
+        new_id = cur.lastrowid
         
         db_close(conn, cur)
         
@@ -363,23 +286,17 @@ def db_check():
         cur.execute("SELECT COUNT(*) FROM films")
         count = cur.fetchone()[0]
         
-        if current_app.config.get('DB_TYPE', 'postgres') == 'postgres':
-            cur.execute("SELECT version()")
-            version = cur.fetchone()[0]
-            db_type = 'PostgreSQL'
-        else:
-            cur.execute("SELECT sqlite_version()")
-            version = cur.fetchone()[0]
-            db_type = 'SQLite'
+        cur.execute("SELECT sqlite_version()")
+        version = cur.fetchone()[0]
         
         db_close(conn, cur)
         
         return jsonify({
             'status': 'ok',
             'film_count': count,
-            'database_type': db_type,
+            'database_type': 'SQLite',
             'version': version,
-            'message': f'База данных ({db_type}) подключена, фильмов: {count}'
+            'message': f'База данных (SQLite) подключена, фильмов: {count}'
         })
         
     except Exception as e:
