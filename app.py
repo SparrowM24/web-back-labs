@@ -21,11 +21,11 @@ from lab8 import lab8
 app = Flask(__name__)
 
 
-LoginManager = LoginManager()
-LoginManager.login_view = 'lab8.login'
-LoginManager.init_app(app)
+login_manager = LoginManager()
+login_manager.login_view = 'lab8.login'
+login_manager.init_app(app)
 
-@LoginManager.user_loader
+@login_manager.user_loader
 def load_users(login_id):
     return users.query.get(int(login_id))
 

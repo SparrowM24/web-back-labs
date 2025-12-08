@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block lab %}Редактирование статьи{% endblock %}
+
+{% block main %}
+
+<div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5;">
+    <a href="/">Главная</a> | 
+    <a href="/lab8/">Лаб 8</a> | 
+    {% if current_user.is_authenticated %}
+        <a href="/lab8/articles/">Статьи</a> | 
+        <a href="/lab8/create_article/">Создать</a> | 
+        Привет, {{ current_user.login }}! | 
+        <a href="/lab8/logout/">Выйти</a>
+    {% else %}
+        <a href="/lab8/register/">Регистрация</a> | 
+        <a href="/lab8/login/">Вход</a>
+    {% endif %}
+</div>
+<style>
+    .lab8-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .lab8-form div {
+        margin-bottom: 20px;
+    }
+    
+    .lab8-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .lab8-form input,
+    .lab8-form textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+    
+    .lab8-form textarea {
+        min-height: 200px;
+        resize: vertical;
+    }
+    
+    .lab8-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .lab8-button {
+        padding: 10px 20px;
+        background: #4364ac;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    
+    .lab8-button-secondary {
+        background: #6c757d;
+    }
+</style>
+
+<h1>Редактирование статьи</h1>
+
+{% if error %}
+<div style="color: #ff0000; background: #ffe6e6; padding: 10px; margin-bottom: 15px; border: 1px solid #ff0000;">
+    {{ error }}
+</div>
+{% endif %}
+
+<form class="lab8-form" method="post">
+    <div>
+        <label for="title">Заголовок:</label>
+        <input type="text" id="title" name="title" value="{{ article.title }}" required>
+    </div>
+    
+    <div>
+        <label for="article_text">Текст статьи:</label>
+        <textarea id="article_text" name="article_text" required>{{ article.article_text }}</textarea>
+    </div>
+    
+    <div class="lab8-checkbox">
+        <input type="checkbox" id="is_public" name="is_public" 
+               {% if article.is_public %}checked{% endif %}>
+        <label for="is_public">Сделать статью публичной</label>
+    </div>
+    
+    <div>
+        <button class="lab8-button" type="submit">Сохранить изменения</button>
+        <a href="/lab8/articles/" class="lab8-button lab8-button-secondary">Отмена</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,7 +1,109 @@
 {% extends "base.html" %}
 
-{% block lab %}Лабораторная работа 8{% endblock %}
+{% block lab %}Мои статьи{% endblock %}
 
 {% block main %}
+<div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5;">
+    <a href="/">Главная</a> | 
+    <a href="/lab8/">Лаб 8</a> | 
+    {% if current_user.is_authenticated %}
+        <a href="/lab8/articles/">Статьи</a> | 
+        <a href="/lab8/create_article/">Создать</a> | 
+        Привет, {{ current_user.login }}! | 
+        <a href="/lab8/logout/">Выйти</a>
+    {% else %}
+        <a href="/lab8/register/">Регистрация</a> | 
+        <a href="/lab8/login/">Вход</a>
+    {% endif %}
+</div>
+<style>
+    .lab8-article-card {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
     
+    .lab8-article-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .lab8-button {
+        padding: 8px 15px;
+        background: #4364ac;
+        color: white;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+    }
+    
+    .lab8-button-danger {
+        background: #dc3545;
+    }
+    
+    .lab8-button-danger:hover {
+        background: #c82333;
+    }
+    
+    .lab8-article-meta {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .lab8-section-title {
+        margin-top: 30px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #4364ac;
+    }
+</style>
+
+<h1>Мои статьи</h1>
+
+{% if current_user.is_authenticated %}
+<a href="/lab8/create_article/" class="lab8-button">+ Создать новую статью</a>
+
+<h2 class="lab8-section-title">Мои статьи</h2>
+{% for article in user_articles %}
+<div class="lab8-article-card">
+    <h3>{{ article.title }}</h3>
+    <div class="lab8-article-meta">
+        {% if article.is_public %}📢 Публичная{% else %}🔒 Приватная{% endif %} | 
+        Лайков: {{ article.likes }}
+    </div>
+    <p>{{ article.article_text[:200] }}{% if article.article_text|length > 200 %}...{% endif %}</p>
+    <div class="lab8-article-actions">
+        <a href="/lab8/edit_article/{{ article.id }}/" class="lab8-button">Редактировать</a>
+        <form method="post" action="/lab8/delete_article/{{ article.id }}/" style="display:inline;">
+            <button type="submit" class="lab8-button lab8-button-danger" 
+                    onclick="return confirm('Вы уверены, что хотите удалить эту статью?')">
+                Удалить
+            </button>
+        </form>
+    </div>
+</div>
+{% else %}
+<p>У вас пока нет статей.</p>
+{% endfor %}
+
+<h2 class="lab8-section-title">Публичные статьи других пользователей</h2>
+{% for article in public_articles %}
+<div class="lab8-article-card">
+    <h3>{{ article.title }}</h3>
+    <div class="lab8-article-meta">Лайков: {{ article.likes }}</div>
+    <p>{{ article.article_text[:200] }}{% if article.article_text|length > 200 %}...{% endif %}</p>
+</div>
+{% else %}
+<p>Пока нет публичных статей от других пользователей.</p>
+{% endfor %}
+
+{% else %}
+<div style="color: #ff0000; background: #ffe6e6; padding: 15px; border: 1px solid #ff0000;">
+    Для просмотра статей необходимо <a href="/lab8/login/">войти в систему</a>
+</div>
+{% endif %}
 {% endblock %}

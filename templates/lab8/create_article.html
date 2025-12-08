@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
-{% block lab %}Лабораторная работа 8{% endblock %}
+{% block lab %}Создание статьи{% endblock %}
 
 {% block main %}
+
 <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5;">
     <a href="/">Главная</a> | 
     <a href="/lab8/">Лаб 8</a> | 
@@ -18,31 +19,30 @@
 </div>
 <style>
     .lab8-form {
-        max-width: 400px;
+        max-width: 600px;
         margin: 0 auto;
-        padding: 20px;
     }
     
     .lab8-form div {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
     
     .lab8-form label {
         display: block;
         margin-bottom: 5px;
+        font-weight: bold;
     }
     
-    .lab8-form input {
+    .lab8-form input,
+    .lab8-form textarea {
         width: 100%;
-        padding: 8px;
+        padding: 10px;
+        border: 1px solid #ddd;
     }
     
-    .lab8-error {
-        color: #ff0000;
-        background: #ffe6e6;
-        padding: 10px;
-        margin-bottom: 15px;
-        border: 1px solid #ff0000;
+    .lab8-form textarea {
+        min-height: 200px;
+        resize: vertical;
     }
     
     .lab8-checkbox {
@@ -59,31 +59,39 @@
         cursor: pointer;
         margin-right: 10px;
     }
+    
+    .lab8-button-secondary {
+        background: #6c757d;
+    }
 </style>
 
-<h1>Вход в систему</h1>
+<h1>Создание новой статьи</h1>
 
 {% if error %}
-<div class="lab8-error">{{ error }}</div>
+<div style="color: #ff0000; background: #ffe6e6; padding: 10px; margin-bottom: 15px; border: 1px solid #ff0000;">
+    {{ error }}
+</div>
 {% endif %}
 
-<form class="lab8-form" action="/lab8/login/" method="post">
+<form class="lab8-form" method="post">
     <div>
-        <label>Логин:</label>
-        <input type="text" name="login" required>
+        <label for="title">Заголовок:</label>
+        <input type="text" id="title" name="title" required>
     </div>
     
     <div>
-        <label>Пароль:</label>
-        <input type="password" name="password" required>
+        <label for="article_text">Текст статьи:</label>
+        <textarea id="article_text" name="article_text" required></textarea>
     </div>
     
     <div class="lab8-checkbox">
-        <input type="checkbox" id="remember" name="remember">
-        <label for="remember">Запомнить меня</label>
+        <input type="checkbox" id="is_public" name="is_public">
+        <label for="is_public">Сделать статью публичной</label>
     </div>
     
-    <button class="lab8-button" type="submit">Войти</button>
-    <a href="/lab8/register/">Регистрация</a>
+    <div>
+        <button class="lab8-button" type="submit">Создать статью</button>
+        <a href="/lab8/articles/" class="lab8-button lab8-button-secondary">Отмена</a>
+    </div>
 </form>
 {% endblock %}
