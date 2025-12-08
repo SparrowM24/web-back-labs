@@ -15,14 +15,14 @@ from lab4 import lab4
 from lab5 import lab5
 from lab6 import lab6
 from lab7 import lab7
-from lab8 import lab8
+from lab8 import lab8_bp
 
 
 app = Flask(__name__)
 
 
 login_manager = LoginManager()
-login_manager.login_view = 'lab8.login'
+login_manager.login_view = 'lab8_bp.login'
 login_manager.init_app(app)
 
 @login_manager.user_loader
@@ -37,7 +37,7 @@ if app.config['DB_TYPE'] == 'postgres':
     db_user = 'alice_dyachkova_orm'
     db_password = '123'
     host_ip = '127.0.0.1'
-    host_port = 5432
+    host_port = 5433
     
     app.config['SQLALCHEMY_DATABASE_URI'] = \
         f'postgresql://{db_user}:{db_password}@{host_ip}:{host_port}/{db_name}'
@@ -57,7 +57,7 @@ app.register_blueprint(lab4)
 app.register_blueprint(lab5)
 app.register_blueprint(lab6)
 app.register_blueprint(lab7)
-app.register_blueprint(lab8)
+app.register_blueprint(lab8_bp)
 
 log = []
 @app.errorhandler(404)
