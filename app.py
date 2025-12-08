@@ -30,7 +30,10 @@ def load_users(login_id):
     return users.query.get(int(login_id))
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'секретно секретный-секрет')
-app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'postgres')
+
+# ВАЖНО: На PythonAnywhere бесплатной версии используем ТОЛЬКО SQLite
+# Изменяем значение по умолчанию на 'sqlite'
+app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'sqlite')  # ← ИЗМЕНЕНО: было 'postgres', стало 'sqlite'
 
 if app.config['DB_TYPE'] == 'postgres':
     db_name = 'alice_dyachkova_orm'
@@ -44,10 +47,25 @@ if app.config['DB_TYPE'] == 'postgres':
 
 else:
     dir_path = path.dirname(path.realpath(__file__))
-    db_path = path.join(dir_path, "alice_dyachkova_orm.db")
+    db_path = path.join(dir_path, "database.db")  # ← ИЗМЕНЕНО: было "alice_dyachkova_orm.db"
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db.init_app(app)
+
+# Создаем таблицы при запуске
+with app.app_context():
+    try:
+        db.create_all()
+        print("✅ Таблицы базы данных созданы/проверены")
+        
+        # Проверяем подключение
+        from db.models import users
+        count = users.query.count()
+        print(f"✅ В базе {count} пользователей")
+    except Exception as e:
+        print(f"❌ Ошибка при создании таблиц: {e}")
 
 app.register_blueprint(lab1)
 app.register_blueprint(lab2)
@@ -134,8 +152,7 @@ def error_500(err):
         Пожалуйста, попробуйте обновить страницу или вернуться позже.
         Если проблема сохраняется, свяжитесь с администратором сайта.
         </p>
-        <a href="/lab1">Вернуться на главную</a>
+        <a href="/">Вернуться на главную</a>
     </body>
     </html>
     ''', 500
-
