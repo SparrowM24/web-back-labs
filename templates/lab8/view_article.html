@@ -53,7 +53,6 @@
         <div class="article-meta">
             Автор: {{ author.login if author else 'Неизвестно' }} | 
             Опубликовано: {{ article.created_at.strftime('%d.%m.%Y %H:%M') if article.created_at else 'Не указано' }} | 
-            Лайков: {{ article.likes }} | 
             {% if article.is_public %}<span style="color: #28a745;">📢 Публичная статья</span>{% else %}<span style="color: #dc3545;">🔒 Приватная статья</span>{% endif %}
         </div>
     </div>

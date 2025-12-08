@@ -14,8 +14,6 @@ def case_insensitive_like(column, pattern):
     Универсальная функция для регистронезависимого поиска.
     Работает как с SQLite, так и с другими базами данных.
     """
-    # Для SQLite используем func.lower() для регистронезависимости
-    # Для других баз данных можно использовать ilike() если он работает
     return func.lower(column).contains(func.lower(pattern))
 
 # Главная страница лабораторной 8
@@ -32,29 +30,24 @@ def register():
     login_form = request.form.get('login')
     password_form = request.form.get('password')
     
-    # Проверка а): имя пользователя не должно быть пустым
     if not login_form or login_form.strip() == '':
         return render_template('lab8/register.html',
                             error='Имя пользователя не может быть пустым')
     
-    # Проверка б): пароль не должен быть пустым
     if not password_form or password_form.strip() == '':
         return render_template('lab8/register.html',
                             error='Пароль не может быть пустым')
     
-    # Проверка существования пользователя
     login_exists = users.query.filter_by(login=login_form).first()
     if login_exists:
         return render_template('lab8/register.html',
                             error='Такой пользователь уже существует')
 
-    # Создание нового пользователя
     password_hash = generate_password_hash(password_form)
     new_user = users(login=login_form, password=password_hash)
     db.session.add(new_user)
     db.session.commit()
     
-    # Автоматический логин после регистрации
     login_user(new_user, remember=False)
     session['login'] = login_form
     
@@ -70,17 +63,14 @@ def login():
     password_form = request.form.get('password')
     remember_me = request.form.get('remember') == 'on'
     
-    # Проверка логина на непустое значение
     if not login_form or login_form.strip() == '':
         return render_template('lab8/login.html',
                             error='Логин не может быть пустым')
     
-    # Проверка пароля на непустое значение
     if not password_form or password_form.strip() == '':
         return render_template('lab8/login.html',
                             error='Пароль не может быть пустым')
     
-    # Поиск пользователя
     user = users.query.filter_by(login=login_form).first()
 
     if user:
@@ -100,33 +90,27 @@ def logout():
     session.clear()
     return redirect('/lab8/')
 
-# Список статей с поиском (ОБНОВЛЕНО с исправленным поиском)
+# Список статей с поиском
 @lab8_bp.route('/lab8/articles/')
 def article_list():
     """Список статей с поиском - доступен всем пользователям"""
     
-    # Получаем параметр поиска
     search_query = request.args.get('search', '').strip()
     
-    # Инициализируем переменные
     user_articles = []
     public_articles = []
     all_public_articles = []
     search_results_count = 0
     
     if current_user.is_authenticated:
-        # Статьи текущего пользователя
         user_query = articles.query.filter_by(login_id=current_user.id)
         
-        # Публичные статьи других пользователей
         public_query = articles.query.filter(
             articles.is_public == True,
             articles.login_id != current_user.id
         )
         
-        # Если есть поисковый запрос - фильтруем (регистронезависимый поиск)
         if search_query:
-            # Поиск в своих статьях (используем нашу функцию для регистронезависимого поиска)
             user_query = user_query.filter(
                 or_(
                     case_insensitive_like(articles.title, search_query),
@@ -134,7 +118,6 @@ def article_list():
                 )
             )
             
-            # Поиск в публичных статьях других
             public_query = public_query.filter(
                 or_(
                     case_insensitive_like(articles.title, search_query),
@@ -142,18 +125,15 @@ def article_list():
                 )
             )
             
-            # Считаем общее количество результатов
             search_results_count = user_query.count() + public_query.count()
         
         user_articles = user_query.all()
         public_articles = public_query.all()
         
     else:
-        # Для неавторизованных пользователей - ВСЕ публичные статьи
         public_query = articles.query.filter_by(is_public=True)
         
         if search_query:
-            # Регистронезависимый поиск
             public_query = public_query.filter(
                 or_(
                     case_insensitive_like(articles.title, search_query),
@@ -164,7 +144,6 @@ def article_list():
         
         all_public_articles = public_query.all()
     
-    # Получаем авторов статей для отображения
     def get_author_name(article_id):
         author = users.query.get(article_id)
         return author.login if author else 'Неизвестно'
@@ -184,18 +163,15 @@ def view_article(article_id):
     """Просмотр статьи - доступна публичная или своя"""
     article = articles.query.get_or_404(article_id)
     
-    # Проверяем, можно ли показывать статью
     if not article.is_public:
-        # Если статья не публичная, проверяем владельца
         if not current_user.is_authenticated or article.login_id != current_user.id:
             return "Статья недоступна", 403
     
-    # Получаем автора статьи
     author = users.query.get(article.login_id)
     
-    # Увеличиваем счетчик просмотров
-    article.views = (article.views or 0) + 1
-    db.session.commit()
+    # УБРАЛИ увеличение счетчика просмотров
+    # article.views = (article.views or 0) + 1
+    # db.session.commit()
     
     return render_template('lab8/view_article.html',
                           article=article,
@@ -222,8 +198,8 @@ def create_article():
         article_text=article_text,
         is_public=is_public,
         likes=0,
-        is_favorite=False,
-        views=0
+        is_favorite=False
+        # УБРАЛИ views=0
     )
     
     db.session.add(new_article)
@@ -237,7 +213,6 @@ def create_article():
 def edit_article(article_id):
     article = articles.query.get_or_404(article_id)
     
-    # Проверяем, принадлежит ли статья текущему пользователю
     if article.login_id != current_user.id:
         return redirect('/lab8/articles/')
     
@@ -267,7 +242,6 @@ def edit_article(article_id):
 def delete_article(article_id):
     article = articles.query.get_or_404(article_id)
     
-    # Проверяем, принадлежит ли статья текущему пользователю
     if article.login_id != current_user.id:
         return redirect('/lab8/articles/')
     
@@ -276,22 +250,8 @@ def delete_article(article_id):
     
     return redirect('/lab8/articles/')
 
-# Лайк статьи
-@lab8_bp.route('/lab8/like_article/<int:article_id>/', methods=['POST'])
-@login_required
-def like_article(article_id):
-    article = articles.query.get_or_404(article_id)
-    
-    # Можно лайкать любые публичные статьи или свои
-    if not article.is_public and article.login_id != current_user.id:
-        return "Нельзя лайкнуть эту статью", 403
-    
-    article.likes = (article.likes or 0) + 1
-    db.session.commit()
-    
-    return redirect(f'/lab8/article/{article_id}/')
 
-# Быстрый поиск (ОБНОВЛЕНО с исправленным поиском)
+# Быстрый поиск
 @lab8_bp.route('/lab8/quick_search/', methods=['GET'])
 def quick_search():
     """Быстрый поиск статей"""
@@ -302,9 +262,7 @@ def quick_search():
     
     results = []
     
-    # Для авторизованных пользователей
     if current_user.is_authenticated:
-        # Свои статьи
         my_articles = articles.query.filter(
             articles.login_id == current_user.id,
             or_(
@@ -313,7 +271,6 @@ def quick_search():
             )
         ).limit(5).all()
         
-        # Публичные статьи других
         other_articles = articles.query.filter(
             articles.is_public == True,
             articles.login_id != current_user.id,
@@ -335,7 +292,6 @@ def quick_search():
             })
     
     else:
-        # Только публичные статьи для неавторизованных
         public_articles = articles.query.filter(
             articles.is_public == True,
             or_(
@@ -370,8 +326,7 @@ def stats():
         'total_articles': articles.query.filter_by(login_id=current_user.id).count(),
         'public_articles': articles.query.filter_by(login_id=current_user.id, is_public=True).count(),
         'private_articles': articles.query.filter_by(login_id=current_user.id, is_public=False).count(),
-        'total_likes': db.session.query(func.sum(articles.likes)).filter_by(login_id=current_user.id).scalar() or 0,
-        'total_views': db.session.query(func.sum(articles.views)).filter_by(login_id=current_user.id).scalar() or 0,
+        # УБРАЛИ total_likes и total_views
     }
     
     return render_template('lab8/stats.html', stats=user_stats)
