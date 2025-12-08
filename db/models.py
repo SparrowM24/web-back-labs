@@ -1,28 +1,27 @@
+# models.py - должно быть так:
 from . import db
 from flask_login import UserMixin
+from datetime import datetime
 
-class users(db.Model, UserMixin):  
+class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.String(30), nullable=False, unique=True)
     password = db.Column(db.String(162), nullable=False)
     
+    # Flask-Login методы
     @property
     def is_active(self):
-        """Все пользователи активны по умолчанию"""
         return True
     
     @property 
     def is_authenticated(self):
-        """Пользователь аутентифицирован"""
         return True if self.id else False
     
     @property
     def is_anonymous(self):
-        """Это не анонимный пользователь"""
         return False
     
     def get_id(self):
-        """Возвращает ID как строку"""
         return str(self.id)
 
 class articles(db.Model):
@@ -33,3 +32,5 @@ class articles(db.Model):
     is_favorite = db.Column(db.Boolean, default=False)
     is_public = db.Column(db.Boolean, default=False)
     likes = db.Column(db.Integer, default=0)
+    views = db.Column(db.Integer, default=0)  # ← Добавьте эту строку
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # ← И эту

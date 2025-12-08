@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block lab %}Лабораторная работа 8{% endblock %}
+
 {% block main %}
 <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5;">
     <a href="/">Главная</a> | 
@@ -15,6 +16,7 @@
         <a href="/lab8/login/">Вход</a>
     {% endif %}
 </div>
+
 <style>
     .lab8-welcome {
         background: #e6f7ff;
@@ -53,6 +55,7 @@
 <ul class="lab8-links">
     <li>📝 <a href="/lab8/articles/">Просмотреть статьи</a></li>
     <li>➕ <a href="/lab8/create_article/">Создать новую статью</a></li>
+    <li>📊 <a href="/lab8/stats/">Статистика</a></li>
     <li>🚪 <a href="/lab8/logout/">Выйти из системы</a></li>
 </ul>
 {% else %}

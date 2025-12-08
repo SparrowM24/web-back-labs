@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block lab %}Мои статьи{% endblock %}
+{% block lab %}Статьи{% endblock %}
 
 {% block main %}
 <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5;">
@@ -9,6 +9,7 @@
     {% if current_user.is_authenticated %}
         <a href="/lab8/articles/">Статьи</a> | 
         <a href="/lab8/create_article/">Создать</a> | 
+        <a href="/lab8/stats/">Статистика</a> | 
         Привет, {{ current_user.login }}! | 
         <a href="/lab8/logout/">Выйти</a>
     {% else %}
@@ -16,94 +17,426 @@
         <a href="/lab8/login/">Вход</a>
     {% endif %}
 </div>
+
 <style>
-    .lab8-article-card {
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
+    .search-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    .lab8-article-actions {
-        margin-top: 10px;
+    .search-form {
+        display: flex;
+        gap: 10px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 2px solid #4364ac;
+        border-radius: 6px;
+        font-size: 16px;
+    }
+    
+    .search-button {
+        padding: 12px 25px;
+        background: #4364ac;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    .search-button:hover {
+        background: #365899;
+    }
+    
+    .search-results-info {
+        text-align: center;
+        margin: 15px 0;
+        color: #666;
+        font-style: italic;
+    }
+    
+    .clear-search-link {
+        color: #4364ac;
+        text-decoration: none;
+        margin-left: 10px;
+    }
+    
+    .clear-search-link:hover {
+        text-decoration: underline;
+    }
+    
+    .article-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+    
+    .article-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+    
+    .article-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .article-header {
+        background: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .article-title {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 1.3em;
+    }
+    
+    .article-meta {
+        font-size: 14px;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .article-badge {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .badge-public {
+        background: #28a745;
+        color: white;
+    }
+    
+    .badge-private {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .article-content {
+        padding: 15px;
+        line-height: 1.5;
+        color: #444;
+    }
+    
+    .article-preview {
+        margin: 10px 0;
+        max-height: 100px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .article-preview::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(transparent, white);
+    }
+    
+    .article-footer {
+        padding: 15px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .article-stats {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .article-actions {
         display: flex;
         gap: 10px;
     }
     
-    .lab8-button {
+    .btn {
         padding: 8px 15px;
-        background: #4364ac;
-        color: white;
         border: none;
+        border-radius: 4px;
         cursor: pointer;
         text-decoration: none;
+        font-size: 14px;
         display: inline-block;
-        font-size: 14px;
     }
     
-    .lab8-button-danger {
+    .btn-primary {
+        background: #4364ac;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-danger {
         background: #dc3545;
+        color: white;
     }
     
-    .lab8-button-danger:hover {
-        background: #c82333;
-    }
-    
-    .lab8-article-meta {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 10px;
-    }
-    
-    .lab8-section-title {
-        margin-top: 30px;
+    .section-title {
+        margin: 40px 0 20px 0;
         padding-bottom: 10px;
         border-bottom: 2px solid #4364ac;
+        color: #333;
+    }
+    
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+        font-size: 18px;
     }
 </style>
 
-<h1>Мои статьи</h1>
-
-{% if current_user.is_authenticated %}
-<a href="/lab8/create_article/" class="lab8-button">+ Создать новую статью</a>
-
-<h2 class="lab8-section-title">Мои статьи</h2>
-{% for article in user_articles %}
-<div class="lab8-article-card">
-    <h3>{{ article.title }}</h3>
-    <div class="lab8-article-meta">
-        {% if article.is_public %}📢 Публичная{% else %}🔒 Приватная{% endif %} | 
-        Лайков: {{ article.likes }}
-    </div>
-    <p>{{ article.article_text[:200] }}{% if article.article_text|length > 200 %}...{% endif %}</p>
-    <div class="lab8-article-actions">
-        <a href="/lab8/edit_article/{{ article.id }}/" class="lab8-button">Редактировать</a>
-        <form method="post" action="/lab8/delete_article/{{ article.id }}/" style="display:inline;">
-            <button type="submit" class="lab8-button lab8-button-danger" 
-                    onclick="return confirm('Вы уверены, что хотите удалить эту статью?')">
-                Удалить
-            </button>
+<div class="container">
+    <div class="search-container">
+        <h2 style="text-align: center; margin-bottom: 20px; color: #333;">
+            {% if search_query %}
+                🔍 Результаты поиска
+            {% else %}
+                📚 Все статьи
+            {% endif %}
+        </h2>
+        
+        <form method="get" action="/lab8/articles/" class="search-form">
+            <input type="text" 
+                   name="search" 
+                   class="search-input" 
+                   placeholder="Поиск по статьям (регистронезависимый)..." 
+                   value="{{ search_query }}"
+                   autofocus>
+            <button type="submit" class="search-button">Найти</button>
         </form>
+        
+        {% if search_query %}
+            <div class="search-results-info">
+                <strong>По запросу "{{ search_query }}" найдено:</strong>
+                {% if current_user.is_authenticated %}
+                    {{ user_articles|length }} ваших статей + {{ public_articles|length }} публичных статей других пользователей
+                {% else %}
+                    {{ all_public_articles|length }} публичных статей
+                {% endif %}
+                <a href="/lab8/articles/" class="clear-search-link">Очистить поиск</a>
+            </div>
+        {% endif %}
     </div>
-</div>
-{% else %}
-<p>У вас пока нет статей.</p>
-{% endfor %}
 
-<h2 class="lab8-section-title">Публичные статьи других пользователей</h2>
-{% for article in public_articles %}
-<div class="lab8-article-card">
-    <h3>{{ article.title }}</h3>
-    <div class="lab8-article-meta">Лайков: {{ article.likes }}</div>
-    <p>{{ article.article_text[:200] }}{% if article.article_text|length > 200 %}...{% endif %}</p>
-</div>
-{% else %}
-<p>Пока нет публичных статей от других пользователей.</p>
-{% endfor %}
+    {% if current_user.is_authenticated %}
+        <div style="text-align: center; margin-bottom: 30px;">
+            <a href="/lab8/create_article/" class="btn btn-primary" style="padding: 12px 25px; font-size: 16px;">
+                📝 Создать новую статью
+            </a>
+        </div>
 
-{% else %}
-<div style="color: #ff0000; background: #ffe6e6; padding: 15px; border: 1px solid #ff0000;">
-    Для просмотра статей необходимо <a href="/lab8/login/">войти в систему</a>
+        {% if search_query and user_articles|length == 0 and public_articles|length == 0 %}
+            <div class="no-results">
+                <h3>😕 Ничего не найдено</h3>
+                <p>По запросу "{{ search_query }}" не найдено ни ваших статей, ни публичных статей других пользователей.</p>
+                <p>Попробуйте изменить запрос или <a href="/lab8/create_article/">создайте новую статью</a>.</p>
+            </div>
+        {% else %}
+            <!-- Мои статьи -->
+            {% if user_articles %}
+                <h3 class="section-title">Мои статьи ({{ user_articles|length }})</h3>
+                <div class="article-grid">
+                    {% for article in user_articles %}
+                    <div class="article-card">
+                        <div class="article-header">
+                            <h3 class="article-title">{{ article.title }}</h3>
+                            <div class="article-meta">
+                                <span>Создано: {{ article.created_at.strftime('%d.%m.%Y') if article.created_at else 'Недавно' }}</span>
+                                <span class="article-badge {% if article.is_public %}badge-public{% else %}badge-private{% endif %}">
+                                    {% if article.is_public %}📢 Публичная{% else %}🔒 Приватная{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="article-content">
+                            <div class="article-preview">
+                                {{ article.article_text[:200] }}
+                                {% if article.article_text|length > 200 %}...{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="article-footer">
+                            <div class="article-stats">
+                                👍 {{ article.likes or 0 }} | 👁️ {{ article.views or 0 }}
+                            </div>
+                            <div class="article-actions">
+                                <a href="/lab8/article/{{ article.id }}/" class="btn btn-primary">Читать</a>
+                                <a href="/lab8/edit_article/{{ article.id }}/" class="btn btn-secondary">Редактировать</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% elif not search_query %}
+                <div class="empty-message">
+                    <h3>📝 У вас пока нет статей</h3>
+                    <p>Создайте свою первую статью, нажав кнопку выше!</p>
+                </div>
+            {% endif %}
+
+            <!-- Публичные статьи других пользователей -->
+            {% if public_articles %}
+                <h3 class="section-title">Публичные статьи других пользователей ({{ public_articles|length }})</h3>
+                <div class="article-grid">
+                    {% for article in public_articles %}
+                    <div class="article-card">
+                        <div class="article-header">
+                            <h3 class="article-title">{{ article.title }}</h3>
+                            <div class="article-meta">
+                                <span>Автор: {{ get_author_name(article.login_id) }}</span>
+                                <span class="article-badge badge-public">📢 Публичная</span>
+                            </div>
+                        </div>
+                        
+                        <div class="article-content">
+                            <div class="article-preview">
+                                {{ article.article_text[:200] }}
+                                {% if article.article_text|length > 200 %}...{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="article-footer">
+                            <div class="article-stats">
+                                👍 {{ article.likes or 0 }} | 👁️ {{ article.views or 0 }}
+                            </div>
+                            <div class="article-actions">
+                                <a href="/lab8/article/{{ article.id }}/" class="btn btn-primary">Читать</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% elif search_query and user_articles|length == 0 %}
+                <div class="empty-message">
+                    <h3>🌐 Нет публичных статей других пользователей</h3>
+                    <p>По вашему запросу не найдено публичных статей других пользователей.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+    {% else %}
+        <!-- Для неавторизованных пользователей -->
+        <div style="background: #e6f7ff; padding: 25px; border-radius: 8px; margin: 30px 0; text-align: center;">
+            <h3 style="color: #4364ac; margin-bottom: 15px;">👋 Добро пожаловать!</h3>
+            <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+                Вы можете просматривать публичные статьи других пользователей.<br>
+                Для создания собственных статей и доступа ко всем функциям необходимо авторизоваться.
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="/lab8/register/" class="btn btn-primary" style="padding: 12px 25px;">📝 Зарегистрироваться</a>
+                <a href="/lab8/login/" class="btn btn-secondary" style="padding: 12px 25px;">🔑 Войти</a>
+            </div>
+        </div>
+
+        <!-- Публичные статьи для неавторизованных -->
+        {% if all_public_articles %}
+            <h3 class="section-title">Публичные статьи ({{ all_public_articles|length }})</h3>
+            
+            {% if search_query %}
+                <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                    По запросу "{{ search_query }}" найдено {{ all_public_articles|length }} публичных статей
+                </p>
+            {% endif %}
+            
+            <div class="article-grid">
+                {% for article in all_public_articles %}
+                <div class="article-card">
+                    <div class="article-header">
+                        <h3 class="article-title">{{ article.title }}</h3>
+                        <div class="article-meta">
+                            <span>Автор: {{ get_author_name(article.login_id) }}</span>
+                            <span class="article-badge badge-public">📢 Публичная</span>
+                        </div>
+                    </div>
+                    
+                    <div class="article-content">
+                        <div class="article-preview">
+                            {{ article.article_text[:200] }}
+                            {% if article.article_text|length > 200 %}...{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="article-footer">
+                        <div class="article-stats">
+                            👍 {{ article.likes or 0 }} | 👁️ {{ article.views or 0 }}
+                        </div>
+                        <div class="article-actions">
+                            <a href="/lab8/article/{{ article.id }}/" class="btn btn-primary">Читать</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                {% if search_query %}
+                    <h3>😕 Ничего не найдено</h3>
+                    <p>По запросу "{{ search_query }}" не найдено публичных статей.</p>
+                {% else %}
+                    <h3>📭 Пока нет публичных статей</h3>
+                    <p>Будьте первым, кто создаст статью! <a href="/lab8/register/">Зарегистрируйтесь</a> или <a href="/lab8/login/">войдите</a>.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif %}
 </div>
-{% endif %}
+
+<!-- JavaScript для быстрого поиска (опционально) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-input');
+    const searchForm = document.querySelector('.search-form');
+    
+    // Автофокус на поле поиска
+    if (searchInput && !searchInput.value) {
+        searchInput.focus();
+    }
+    
+    // Обработка клавиши Enter для поиска
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchForm.submit();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

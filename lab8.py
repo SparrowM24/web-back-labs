@@ -1,21 +1,20 @@
-from flask import Blueprint, render_template, request, redirect, session
+from flask import Blueprint, render_template, request, redirect, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import db
 from db.models import users, articles
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
-# ОШИБКА: Blueprint и функция имеют одинаковое имя 'lab8'
-# Blueprint должен иметь другое имя
-lab8_bp = Blueprint('lab8', __name__)  # ← ИЗМЕНИТЕ НА lab8_bp
+# Blueprint с правильным именем
+lab8_bp = Blueprint('lab8_bp', __name__)
 
 # Главная страница лабораторной 8
-@lab8_bp.route('/lab8/')  # ← ИСПОЛЬЗУЙТЕ lab8_bp
-def lab8_index():  # ← ИЗМЕНИТЕ ИМЯ ФУНКЦИИ
+@lab8_bp.route('/lab8/')
+def lab8_index():
     return render_template('lab8/lab8.html')
 
 # Регистрация
-@lab8_bp.route('/lab8/register/', methods=['GET', 'POST'])  # ← lab8_bp
+@lab8_bp.route('/lab8/register/', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
         return render_template('lab8/register.html')
@@ -52,7 +51,7 @@ def register():
     return redirect('/lab8/')
 
 # Вход в систему
-@lab8_bp.route('/lab8/login/', methods=['GET', 'POST'])  # ← lab8_bp
+@lab8_bp.route('/lab8/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
         return render_template('lab8/login.html')
@@ -84,32 +83,118 @@ def login():
                         error='Ошибка входа: логин и/или пароль неверны')
 
 # Выход из системы
-@lab8_bp.route('/lab8/logout/')  # ← lab8_bp
+@lab8_bp.route('/lab8/logout/')
 @login_required
 def logout():
     logout_user()
     session.clear()
     return redirect('/lab8/')
 
-# Список статей
-@lab8_bp.route('/lab8/articles/')  # ← lab8_bp
-@login_required
+# Список статей с поиском (ОБНОВЛЕНО для дополнительного задания)
+@lab8_bp.route('/lab8/articles/')
 def article_list():
-    # Статьи текущего пользователя
-    user_articles = articles.query.filter_by(login_id=current_user.id).all()
+    """Список статей с поиском - доступен всем пользователям"""
     
-    # Публичные статьи других пользователей
-    public_articles = articles.query.filter(
-        articles.is_public == True,
-        articles.login_id != current_user.id
-    ).all()
+    # Получаем параметр поиска
+    search_query = request.args.get('search', '').strip()
+    
+    # Инициализируем переменные
+    user_articles = []
+    public_articles = []
+    all_public_articles = []
+    search_results_count = 0
+    
+    if current_user.is_authenticated:
+        # Статьи текущего пользователя
+        user_query = articles.query.filter_by(login_id=current_user.id)
+        
+        # Публичные статьи других пользователей
+        public_query = articles.query.filter(
+            articles.is_public == True,
+            articles.login_id != current_user.id
+        )
+        
+        # Если есть поисковый запрос - фильтруем (регистронезависимый поиск)
+        if search_query:
+            search_pattern = f"%{search_query}%"
+            
+            # Поиск в своих статьях
+            user_query = user_query.filter(
+                or_(
+                    articles.title.ilike(search_pattern),
+                    articles.article_text.ilike(search_pattern)
+                )
+            )
+            
+            # Поиск в публичных статьях других
+            public_query = public_query.filter(
+                or_(
+                    articles.title.ilike(search_pattern),
+                    articles.article_text.ilike(search_pattern)
+                )
+            )
+            
+            # Считаем общее количество результатов
+            search_results_count = user_query.count() + public_query.count()
+        
+        user_articles = user_query.all()
+        public_articles = public_query.all()
+        
+    else:
+        # Для неавторизованных пользователей - ВСЕ публичные статьи
+        public_query = articles.query.filter_by(is_public=True)
+        
+        if search_query:
+            search_pattern = f"%{search_query}%"
+            public_query = public_query.filter(
+                or_(
+                    articles.title.ilike(search_pattern),
+                    articles.article_text.ilike(search_pattern)
+                )
+            )
+            search_results_count = public_query.count()
+        
+        all_public_articles = public_query.all()
+    
+    # Получаем авторов статей для отображения
+    def get_author_name(article_id):
+        author = users.query.get(article_id)
+        return author.login if author else 'Неизвестно'
     
     return render_template('lab8/articles.html',
                           user_articles=user_articles,
-                          public_articles=public_articles)
+                          public_articles=public_articles,
+                          all_public_articles=all_public_articles,
+                          search_query=search_query,
+                          search_results_count=search_results_count,
+                          get_author_name=get_author_name,
+                          current_user=current_user)
+
+# Просмотр отдельной статьи (НОВАЯ функция)
+@lab8_bp.route('/lab8/article/<int:article_id>/')
+def view_article(article_id):
+    """Просмотр статьи - доступна публичная или своя"""
+    article = articles.query.get_or_404(article_id)
+    
+    # Проверяем, можно ли показывать статью
+    if not article.is_public:
+        # Если статья не публичная, проверяем владельца
+        if not current_user.is_authenticated or article.login_id != current_user.id:
+            return "Статья недоступна", 403
+    
+    # Получаем автора статьи
+    author = users.query.get(article.login_id)
+    
+    # Увеличиваем счетчик просмотров
+    article.views = (article.views or 0) + 1
+    db.session.commit()
+    
+    return render_template('lab8/view_article.html',
+                          article=article,
+                          author=author)
 
 # Создание статьи
-@lab8_bp.route('/lab8/create_article/', methods=['GET', 'POST'])  # ← lab8_bp
+@lab8_bp.route('/lab8/create_article/', methods=['GET', 'POST'])
 @login_required
 def create_article():
     if request.method == 'GET':
@@ -129,7 +214,8 @@ def create_article():
         article_text=article_text,
         is_public=is_public,
         likes=0,
-        is_favorite=False
+        is_favorite=False,
+        views=0
     )
     
     db.session.add(new_article)
@@ -138,7 +224,7 @@ def create_article():
     return redirect('/lab8/articles/')
 
 # Редактирование статьи
-@lab8_bp.route('/lab8/edit_article/<int:article_id>/', methods=['GET', 'POST'])  # ← lab8_bp
+@lab8_bp.route('/lab8/edit_article/<int:article_id>/', methods=['GET', 'POST'])
 @login_required
 def edit_article(article_id):
     article = articles.query.get_or_404(article_id)
@@ -168,7 +254,7 @@ def edit_article(article_id):
     return redirect('/lab8/articles/')
 
 # Удаление статьи
-@lab8_bp.route('/lab8/delete_article/<int:article_id>/', methods=['POST'])  # ← lab8_bp
+@lab8_bp.route('/lab8/delete_article/<int:article_id>/', methods=['POST'])
 @login_required
 def delete_article(article_id):
     article = articles.query.get_or_404(article_id)
@@ -181,3 +267,105 @@ def delete_article(article_id):
     db.session.commit()
     
     return redirect('/lab8/articles/')
+
+# Лайк статьи (НОВАЯ функция)
+@lab8_bp.route('/lab8/like_article/<int:article_id>/', methods=['POST'])
+@login_required
+def like_article(article_id):
+    article = articles.query.get_or_404(article_id)
+    
+    # Можно лайкать любые публичные статьи или свои
+    if not article.is_public and article.login_id != current_user.id:
+        return "Нельзя лайкнуть эту статью", 403
+    
+    article.likes = (article.likes or 0) + 1
+    db.session.commit()
+    
+    return redirect(f'/lab8/article/{article_id}/')
+
+# Быстрый поиск (НОВАЯ функция)
+@lab8_bp.route('/lab8/quick_search/', methods=['GET'])
+def quick_search():
+    """Быстрый поиск статей"""
+    search_query = request.args.get('q', '').strip()
+    
+    if not search_query:
+        return jsonify({'error': 'Введите поисковый запрос'}), 400
+    
+    search_pattern = f"%{search_query}%"
+    
+    results = []
+    
+    # Для авторизованных пользователей
+    if current_user.is_authenticated:
+        # Свои статьи
+        my_articles = articles.query.filter(
+            articles.login_id == current_user.id,
+            or_(
+                articles.title.ilike(search_pattern),
+                articles.article_text.ilike(search_pattern)
+            )
+        ).limit(5).all()
+        
+        # Публичные статьи других
+        other_articles = articles.query.filter(
+            articles.is_public == True,
+            articles.login_id != current_user.id,
+            or_(
+                articles.title.ilike(search_pattern),
+                articles.article_text.ilike(search_pattern)
+            )
+        ).limit(5).all()
+        
+        for article in my_articles + other_articles:
+            author = users.query.get(article.login_id)
+            results.append({
+                'id': article.id,
+                'title': article.title,
+                'preview': article.article_text[:100] + '...' if len(article.article_text) > 100 else article.article_text,
+                'author': author.login if author else 'Неизвестно',
+                'is_mine': article.login_id == current_user.id,
+                'url': f'/lab8/article/{article.id}/'
+            })
+    
+    else:
+        # Только публичные статьи для неавторизованных
+        public_articles = articles.query.filter(
+            articles.is_public == True,
+            or_(
+                articles.title.ilike(search_pattern),
+                articles.article_text.ilike(search_pattern)
+            )
+        ).limit(10).all()
+        
+        for article in public_articles:
+            author = users.query.get(article.login_id)
+            results.append({
+                'id': article.id,
+                'title': article.title,
+                'preview': article.article_text[:100] + '...' if len(article.article_text) > 100 else article.article_text,
+                'author': author.login if author else 'Неизвестно',
+                'is_mine': False,
+                'url': f'/lab8/article/{article.id}/'
+            })
+    
+    return jsonify({
+        'query': search_query,
+        'count': len(results),
+        'results': results
+    })
+
+# Статистика статей пользователя
+@lab8_bp.route('/lab8/stats/')
+@login_required
+def stats():
+    """Статистика пользователя"""
+    user_stats = {
+        'total_articles': articles.query.filter_by(login_id=current_user.id).count(),
+        'public_articles': articles.query.filter_by(login_id=current_user.id, is_public=True).count(),
+        'private_articles': articles.query.filter_by(login_id=current_user.id, is_public=False).count(),
+        'total_likes': db.session.query(func.sum(articles.likes)).filter_by(login_id=current_user.id).scalar() or 0,
+        'total_views': db.session.query(func.sum(articles.views)).filter_by(login_id=current_user.id).scalar() or 0,
+    }
+    
+    return render_template('lab8/stats.html', stats=user_stats)

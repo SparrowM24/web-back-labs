@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block lab %}Просмотр статьи{% endblock %}
+
+{% block main %}
+<div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5;">
+    <a href="/">Главная</a> | 
+    <a href="/lab8/">Лаб 8</a> | 
+    <a href="/lab8/articles/">Назад к статьям</a>
+    {% if current_user.is_authenticated %}
+        | Привет, {{ current_user.login }}!
+    {% endif %}
+</div>
+
+<style>
+    .article-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .article-header {
+        border-bottom: 2px solid #4364ac;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .article-title {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .article-meta {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .article-content {
+        line-height: 1.6;
+        font-size: 16px;
+    }
+    
+    .article-actions {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+    }
+</style>
+
+<div class="article-container">
+    <div class="article-header">
+        <h1 class="article-title">{{ article.title }}</h1>
+        <div class="article-meta">
+            Автор: {{ author.login if author else 'Неизвестно' }} | 
+            Опубликовано: {{ article.created_at.strftime('%d.%m.%Y %H:%M') if article.created_at else 'Не указано' }} | 
+            Лайков: {{ article.likes }} | 
+            {% if article.is_public %}<span style="color: #28a745;">📢 Публичная статья</span>{% else %}<span style="color: #dc3545;">🔒 Приватная статья</span>{% endif %}
+        </div>
+    </div>
+    
+    <div class="article-content">
+        {{ article.article_text|safe }}
+    </div>
+    
+    <div class="article-actions">
+        <a href="/lab8/articles/" class="lab8-button">← Назад к списку статей</a>
+        {% if current_user.is_authenticated and article.login_id == current_user.id %}
+            <a href="/lab8/edit_article/{{ article.id }}/" class="lab8-button">✏️ Редактировать</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
