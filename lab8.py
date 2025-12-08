@@ -3,28 +3,16 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import db
 from db.models import users, articles
-from sqlalchemy import or_, func
 
 # Blueprint с правильным именем
 lab8_bp = Blueprint('lab8_bp', __name__)
-
-# Вспомогательная функция для регистронезависимого поиска - ИСПРАВЛЕННАЯ
-def case_insensitive_search(column, search_text):
-    """
-    Правильная функция для регистронезависимого поиска.
-    Использует like с приведением к нижнему регистру.
-    """
-    # Создаем шаблон для поиска: %текст%
-    pattern = f"%{search_text}%"
-    # Приводим колонку и шаблон к нижнему регистру для регистронезависимого поиска
-    return func.lower(column).like(func.lower(pattern))
 
 # Главная страница лабораторной 8
 @lab8_bp.route('/lab8/')
 def lab8_index():
     return render_template('lab8/lab8.html')
 
-# Регистрация (без изменений)
+# Регистрация
 @lab8_bp.route('/lab8/register/', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
@@ -56,7 +44,7 @@ def register():
     
     return redirect('/lab8/')
 
-# Вход в систему (без изменений)
+# Вход в систему
 @lab8_bp.route('/lab8/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -85,7 +73,7 @@ def login():
     return render_template('lab8/login.html',
                         error='Ошибка входа: логин и/или пароль неверны')
 
-# Выход из системы (без изменений)
+# Выход из системы
 @lab8_bp.route('/lab8/logout/')
 @login_required
 def logout():
@@ -93,61 +81,67 @@ def logout():
     session.clear()
     return redirect('/lab8/')
 
-# Список статей с поиском - ИСПРАВЛЕННЫЙ ПОИСК
+# Список статей с поиском - ПРОСТОЙ И РАБОЧИЙ ВАРИАНТ
 @lab8_bp.route('/lab8/articles/')
 def article_list():
     """Список статей с поиском - доступен всем пользователям"""
     
     search_query = request.args.get('search', '').strip()
     
-    user_articles = []
-    public_articles = []
-    all_public_articles = []
-    search_results_count = 0
-    
     if current_user.is_authenticated:
-        user_query = articles.query.filter_by(login_id=current_user.id)
-        
-        public_query = articles.query.filter(
-            articles.is_public == True,
-            articles.login_id != current_user.id
-        )
-        
+        # Для авторизованных пользователей
         if search_query:
-            # ИСПРАВЛЕННЫЙ ПОИСК - используем нашу исправленную функцию
-            user_query = user_query.filter(
-                or_(
-                    case_insensitive_search(articles.title, search_query),
-                    case_insensitive_search(articles.article_text, search_query)
-                )
-            )
+            search_lower = search_query.lower()
             
-            public_query = public_query.filter(
-                or_(
-                    case_insensitive_search(articles.title, search_query),
-                    case_insensitive_search(articles.article_text, search_query)
-                )
-            )
+            # Получаем ВСЕ свои статьи и фильтруем вручную
+            all_my_articles = articles.query.filter_by(login_id=current_user.id).all()
+            user_articles = [
+                article for article in all_my_articles
+                if search_lower in article.title.lower() or search_lower in article.article_text.lower()
+            ]
             
-            search_results_count = user_query.count() + public_query.count()
-        
-        user_articles = user_query.all()
-        public_articles = public_query.all()
-        
+            # Получаем ВСЕ публичные статьи других и фильтруем вручную
+            all_other_public = articles.query.filter(
+                articles.is_public == True,
+                articles.login_id != current_user.id
+            ).all()
+            public_articles = [
+                article for article in all_other_public
+                if search_lower in article.title.lower() or search_lower in article.article_text.lower()
+            ]
+            
+            all_public_articles = []
+            search_results_count = len(user_articles) + len(public_articles)
+        else:
+            # Без поиска - просто все статьи
+            user_articles = articles.query.filter_by(login_id=current_user.id).all()
+            public_articles = articles.query.filter(
+                articles.is_public == True,
+                articles.login_id != current_user.id
+            ).all()
+            all_public_articles = []
+            search_results_count = 0
     else:
-        public_query = articles.query.filter_by(is_public=True)
-        
+        # Для неавторизованных пользователей
         if search_query:
-            # ИСПРАВЛЕННЫЙ ПОИСК
-            public_query = public_query.filter(
-                or_(
-                    case_insensitive_search(articles.title, search_query),
-                    case_insensitive_search(articles.article_text, search_query)
-                )
-            )
-            search_results_count = public_query.count()
-        
-        all_public_articles = public_query.all()
+            search_lower = search_query.lower()
+            
+            # Получаем ВСЕ публичные статьи и фильтруем вручную
+            all_public = articles.query.filter_by(is_public=True).all()
+            all_public_articles = [
+                article for article in all_public
+                if search_lower in article.title.lower() or search_lower in article.article_text.lower()
+            ]
+            
+            user_articles = []
+            public_articles = []
+            search_results_count = len(all_public_articles)
+        else:
+            # Без поиска - просто все публичные статьи
+            all_public_articles = articles.query.filter_by(is_public=True).all()
+            user_articles = []
+            public_articles = []
+            search_results_count = 0
     
     def get_author_name(article_id):
         author = users.query.get(article_id)
@@ -162,10 +156,9 @@ def article_list():
                           get_author_name=get_author_name,
                           current_user=current_user)
 
-# Просмотр отдельной статьи (без views)
+# Просмотр отдельной статьи
 @lab8_bp.route('/lab8/article/<int:article_id>/')
 def view_article(article_id):
-    """Просмотр статьи - доступна публичная или своя"""
     article = articles.query.get_or_404(article_id)
     
     if not article.is_public:
@@ -178,7 +171,7 @@ def view_article(article_id):
                           article=article,
                           author=author)
 
-# Создание статьи (без изменений)
+# Создание статьи
 @lab8_bp.route('/lab8/create_article/', methods=['GET', 'POST'])
 @login_required
 def create_article():
@@ -206,7 +199,7 @@ def create_article():
     
     return redirect('/lab8/articles/')
 
-# Редактирование статьи (без изменений)
+# Редактирование статьи
 @lab8_bp.route('/lab8/edit_article/<int:article_id>/', methods=['GET', 'POST'])
 @login_required
 def edit_article(article_id):
@@ -235,7 +228,7 @@ def edit_article(article_id):
     
     return redirect('/lab8/articles/')
 
-# Удаление статьи (без изменений)
+# Удаление статьи
 @lab8_bp.route('/lab8/delete_article/<int:article_id>/', methods=['POST'])
 @login_required
 def delete_article(article_id):
@@ -249,77 +242,10 @@ def delete_article(article_id):
     
     return redirect('/lab8/articles/')
 
-# Быстрый поиск - ИСПРАВЛЕННЫЙ
-@lab8_bp.route('/lab8/quick_search/', methods=['GET'])
-def quick_search():
-    """Быстрый поиск статей"""
-    search_query = request.args.get('q', '').strip()
-    
-    if not search_query:
-        return jsonify({'error': 'Введите поисковый запрос'}), 400
-    
-    results = []
-    
-    if current_user.is_authenticated:
-        my_articles = articles.query.filter(
-            articles.login_id == current_user.id,
-            or_(
-                case_insensitive_search(articles.title, search_query),
-                case_insensitive_search(articles.article_text, search_query)
-            )
-        ).limit(5).all()
-        
-        other_articles = articles.query.filter(
-            articles.is_public == True,
-            articles.login_id != current_user.id,
-            or_(
-                case_insensitive_search(articles.title, search_query),
-                case_insensitive_search(articles.article_text, search_query)
-            )
-        ).limit(5).all()
-        
-        for article in my_articles + other_articles:
-            author = users.query.get(article.login_id)
-            results.append({
-                'id': article.id,
-                'title': article.title,
-                'preview': article.article_text[:100] + '...' if len(article.article_text) > 100 else article.article_text,
-                'author': author.login if author else 'Неизвестно',
-                'is_mine': article.login_id == current_user.id,
-                'url': f'/lab8/article/{article.id}/'
-            })
-    
-    else:
-        public_articles = articles.query.filter(
-            articles.is_public == True,
-            or_(
-                case_insensitive_search(articles.title, search_query),
-                case_insensitive_search(articles.article_text, search_query)
-            )
-        ).limit(10).all()
-        
-        for article in public_articles:
-            author = users.query.get(article.login_id)
-            results.append({
-                'id': article.id,
-                'title': article.title,
-                'preview': article.article_text[:100] + '...' if len(article.article_text) > 100 else article.article_text,
-                'author': author.login if author else 'Неизвестно',
-                'is_mine': False,
-                'url': f'/lab8/article/{article.id}/'
-            })
-    
-    return jsonify({
-        'query': search_query,
-        'count': len(results),
-        'results': results
-    })
-
-# Статистика статей пользователя (без likes и views)
+# Статистика
 @lab8_bp.route('/lab8/stats/')
 @login_required
 def stats():
-    """Статистика пользователя"""
     user_stats = {
         'total_articles': articles.query.filter_by(login_id=current_user.id).count(),
         'public_articles': articles.query.filter_by(login_id=current_user.id, is_public=True).count(),
