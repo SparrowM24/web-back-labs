@@ -241,15 +241,3 @@ def delete_article(article_id):
     db.session.commit()
     
     return redirect('/lab8/articles/')
-
-# Статистика
-@lab8_bp.route('/lab8/stats/')
-@login_required
-def stats():
-    user_stats = {
-        'total_articles': articles.query.filter_by(login_id=current_user.id).count(),
-        'public_articles': articles.query.filter_by(login_id=current_user.id, is_public=True).count(),
-        'private_articles': articles.query.filter_by(login_id=current_user.id, is_public=False).count(),
-    }
-    
-    return render_template('lab8/stats.html', stats=user_stats)
