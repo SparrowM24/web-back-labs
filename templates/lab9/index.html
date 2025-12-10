@@ -5,16 +5,41 @@
 {% block main %}
     <h1>🎄 Новогодние Подарки 🎁</h1>
     
+    <!-- Панель информации и управления -->
     <div class="info-panel">
-        <p>Открыто коробок: <span id="opened-count">0</span> из 3</p>
-        <p>Осталось неоткрытых: <span id="remaining">10</span></p>
-        <button id="reset-btn" class="reset-btn">Начать заново</button>
+        <div class="user-info">
+            {% if is_authenticated %}
+                <span>👤 {{ login }}</span>
+                <a href="/lab9/logout" class="auth-btn logout-btn">Выйти</a>
+            {% else %}
+                <span>👤 Гость</span>
+                <a href="/lab5/login" class="auth-btn login-btn">Войти</a>
+                <a href="/lab5/register" class="auth-btn register-btn">Регистрация</a>
+            {% endif %}
+        </div>
+        
+        <div class="game-info">
+            <p>Открыто коробок: <span id="opened-count">0</span> из 3</p>
+            <p>Осталось неоткрытых: <span id="remaining">10</span></p>
+            <div class="buttons">
+                <button id="reset-btn" class="reset-btn">Начать заново</button>
+                {% if is_authenticated %}
+                    <button id="refill-btn" class="refill-btn">🎅 Дед Мороз</button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="premium-info" id="premium-info" style="display: none;">
+            <p>🎁 <strong>Премиальные подарки (6-10)</strong> доступны только авторизованным пользователям!</p>
+        </div>
     </div>
     
+    <!-- Контейнер для коробок -->
     <div id="boxes-container" class="boxes-container">
         <!-- Коробки будут добавлены через JavaScript -->
     </div>
     
+    <!-- Модальное окно для поздравления -->
     <div id="message" class="message-container" style="display: none;">
         <div class="message-content">
             <button onclick="closeMessage()" class="close-btn">×</button>
@@ -26,115 +51,414 @@
         </div>
     </div>
     
+    <!-- Модальное окно для авторизации -->
+    <div id="auth-modal" class="modal-container" style="display: none;">
+        <div class="modal-content">
+            <button onclick="closeAuthModal()" class="close-btn">×</button>
+            <h2>🔒 Требуется авторизация</h2>
+            <p>Этот подарок доступен только авторизованным пользователям.</p>
+            <div class="modal-buttons">
+                <a href="/lab5/login" class="modal-btn login-modal-btn">Войти</a>
+                <a href="/lab5/register" class="modal-btn register-modal-btn">Зарегистрироваться</a>
+                <button onclick="closeAuthModal()" class="modal-btn cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    
     <style>
+        /* HEADER СТИЛИ - Уменьшенный */
+        header {
+            background: linear-gradient(135deg, rgba(26, 41, 128, 0.95), rgba(38, 208, 206, 0.95));
+            backdrop-filter: blur(10px);
+            padding: 15px 0; /* Уменьшили padding */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+            color: #ffeb3b;
+            min-height: 70px; /* Фиксированная высота */
+        }
+
+        /* FOOTER СТИЛИ - Уменьшенный */
+        footer {
+            background: linear-gradient(135deg, rgba(26, 41, 128, 0.9), rgba(38, 208, 206, 0.9));
+            padding: 20px 0 15px; /* Уменьшили padding */
+            margin-top: 50px; /* Уменьшили отступ */
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
+            color: #ffeb3b;
+            min-height: 120px; /* Фиксированная высота */
+        }
+
         body {
-            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            background: linear-gradient(135deg, #1a2980, #26d0ce, #1a2980);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite; /* Добавили анимацию */
             color: white;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             font-family: 'Arial', sans-serif;
             overflow-x: hidden;
+            position: relative;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            padding: 15px; /* Уменьшили padding */
+            position: relative;
+            z-index: 2;
+            min-height: calc(100vh - 190px); /* Учитываем высоту header и footer */
         }
         
         h1 {
             text-align: center;
             color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            font-size: 2.5em;
-            margin-bottom: 30px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            font-size: 2.2em; /* Уменьшили размер */
+            margin: 10px 0 20px 0; /* Уменьшили отступы */
+            padding-top: 10px;
         }
         
         .info-panel {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px auto;
-            max-width: 500px;
-            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px; /* Уменьшили padding */
+            border-radius: 15px; /* Уменьшили радиус */
+            margin: 15px auto; /* Уменьшили отступы */
+            max-width: 800px; /* Уменьшили максимальную ширину */
             backdrop-filter: blur(10px);
-            border: 2px solid #FFD700;
+            border: 2px solid rgba(255, 215, 0, 0.8);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
-        .info-panel p {
-            font-size: 1.2em;
-            margin: 10px 0;
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px; /* Уменьшили отступы */
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
         
-        .reset-btn {
-            background: #FFD700;
+        .user-info span {
+            font-size: 1.1em; /* Уменьшили размер */
+            color: #FFD700;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .auth-btn {
+            padding: 8px 20px; /* Уменьшили padding */
+            border-radius: 20px; /* Уменьшили радиус */
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            margin-left: 10px; /* Уменьшили отступ */
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 0.9em; /* Уменьшили размер */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .login-btn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        }
+        
+        .login-btn:hover {
+            background: linear-gradient(135deg, #45a049, #1B5E20);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #f44336, #c62828);
+        }
+        
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+        
+        .register-btn {
+            background: linear-gradient(135deg, #2196F3, #1565C0);
+        }
+        
+        .register-btn:hover {
+            background: linear-gradient(135deg, #1976D2, #0D47A1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        .game-info {
+            text-align: center;
+            padding: 12px; /* Уменьшили padding */
+        }
+        
+        .game-info p {
+            font-size: 1.1em; /* Уменьшили размер */
+            margin: 10px 0; /* Уменьшили отступы */
+            color: #E3F2FD;
+            font-weight: 500;
+        }
+        
+        .game-info p span {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.2em; /* Уменьшили размер */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Уменьшили отступы */
+            margin-top: 20px; /* Уменьшили отступ */
+            flex-wrap: wrap;
+        }
+        
+        .reset-btn, .refill-btn {
+            background: linear-gradient(135deg, #FFD700, #FF9800);
             color: #1a2980;
             border: none;
-            padding: 10px 30px;
-            border-radius: 25px;
-            font-size: 1em;
+            padding: 12px 25px; /* Уменьшили padding */
+            border-radius: 25px; /* Уменьшили радиус */
+            font-size: 1em; /* Уменьшили размер */
             cursor: pointer;
-            margin-top: 10px;
             font-weight: bold;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 215, 0, 0.8);
+            min-width: 160px; /* Уменьшили минимальную ширину */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
         
         .reset-btn:hover {
-            transform: scale(1.05);
-            background: #ffed4e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #FFE44D, #FFA726);
         }
         
+        .refill-btn {
+            background: linear-gradient(135deg, #E91E63, #AD1457);
+            color: white;
+            font-size: 1em; /* Уменьшили размер */
+            border: 2px solid rgba(233, 30, 99, 0.8);
+        }
+        
+        .refill-btn:hover {
+            background: linear-gradient(135deg, #C2185B, #880E4F);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(233, 30, 99, 0.5);
+        }
+        
+        .premium-info {
+            background: linear-gradient(135deg, rgba(233, 30, 99, 0.25), rgba(173, 20, 87, 0.25));
+            border: 2px solid rgba(233, 30, 99, 0.8);
+            border-radius: 12px; /* Уменьшили радиус */
+            padding: 15px; /* Уменьшили padding */
+            margin-top: 20px; /* Уменьшили отступ */
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .premium-info p {
+            margin: 0;
+            font-size: 1em; /* Уменьшили размер */
+            color: #FFCCD2;
+            font-weight: 500;
+        }
+        
+        /* КОРОБКИ - СДЕЛАЕМ МЕНЬШЕ И ФИКСИРОВАННОГО РАЗМЕРА */
         .boxes-container {
             position: relative;
-            width: 100%;
-            height: 70vh;
-            min-height: 500px;
-            margin: 30px auto;
-            border: 3px dashed #FFD700;
-            border-radius: 15px;
+            width: 90%;
+            height: 50vh; /* Уменьшили высоту */
+            min-height: 400px; /* Уменьшили минимальную высоту */
+            margin: 20px auto; /* Уменьшили отступы */
+            border: 3px dashed rgba(255, 215, 0, 0.7);
+            border-radius: 15px; /* Уменьшили радиус */
             overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.25);
+            max-width: 1100px; /* Уменьшили максимальную ширину */
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
         
+        /* КОРОБКИ ФИКСИРОВАННОГО РАЗМЕРА */
         .gift-box {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(45deg, #e2942d, #ffeb3b);
-            border: 3px solid #c62828;
-            border-radius: 10px;
+            width: 80px !important; /* Фиксированная ширина */
+            height: 80px !important; /* Фиксированная высота */
+            border: 2px solid #e53935; /* Уменьшили границу */
+            border-radius: 15px; /* Уменьшили радиус */
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-origin: center;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            background-size: cover;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4); /* Уменьшили тень */
             overflow: hidden;
+            background: linear-gradient(135deg, #ffbf47, #ffeb3b);
+            z-index: 1;
         }
         
-        .gift-box-image {
-            width: 70px;
-            height: 70px;
-            object-fit: contain;
-            transition: transform 0.3s;
-        }
-        
-        .gift-box:hover:not(.opened) {
-            transform: scale(1.2) rotate(5deg);
-            box-shadow: 0 0 20px gold;
-            z-index: 10;
-        }
-        
-        .gift-box:hover:not(.opened) .gift-box-image {
-            transform: scale(1.1);
-        }
-        
+        /* ОТКРЫТЫЕ ПОДАРКИ */
         .gift-box.opened {
-            background: linear-gradient(45deg, #78909c, #b0bec5);
+            background: linear-gradient(135deg, #616161, #757575) !important;
+            border-color: #9e9e9e !important;
             cursor: default;
-            opacity: 0.7;
+            opacity: 0.35 !important;
+            transform: scale(0.9) !important; /* Уменьшили масштаб */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+            filter: grayscale(100%) brightness(0.6) !important;
+            z-index: -100;
         }
         
         .gift-box.opened .gift-box-image {
-            filter: grayscale(80%) brightness(70%);
+            opacity: 0.4 !important;
+            filter: grayscale(100%) brightness(0.5) !important;
+        }
+        
+        .gift-box.opened::before {
+            position: absolute;
+            top: 3px; /* Уменьшили отступ */
+            right: 3px;
+            color: #4CAF50;
+            font-size: 1.2em; /* Уменьшили размер */
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0,0,0,0.8);
+            z-index: 3;
+        }
+        
+        .gift-box.locked {
+            background: linear-gradient(135deg, #424242, #616161);
+            cursor: not-allowed;
+            border-color: #757575;
+            opacity: 0.8;
+        }
+        
+        .gift-box.locked .gift-box-image {
+            filter: grayscale(70%) brightness(0.7);
+            opacity: 0.7;
+        }
+        
+        .gift-box.locked::after {
+            content: "🔒";
+            position: absolute;
+            top: 5px; /* Уменьшили отступ */
+            right: 5px;
+            font-size: 1em; /* Уменьшили размер */
+            z-index: 2;
+            text-shadow: 0 0 3px rgba(0,0,0,0.8);
+        }
+        
+        .gift-box-image {
+            width: 60px !important; /* Фиксированная ширина */
+            height: 60px !important; /* Фиксированная высота */
+            object-fit: contain;
+            transition: all 0.3s ease;
+            border-radius: 4px; /* Уменьшили радиус */
+        }
+        
+        .gift-box:hover:not(.opened):not(.locked) {
+            transform: scale(1.2) rotate(5deg); /* Уменьшили масштаб */
+            box-shadow: 0 0 15px gold, 0 8px 20px rgba(0,0,0,0.5);
+            z-index: 10;
+            border-color: #FFD700;
+        }
+        
+        .gift-box:hover:not(.opened):not(.locked) .gift-box-image {
+            transform: scale(1.1);
+        }
+        
+        /* МОДАЛЬНЫЕ ОКНА - УМЕНЬШЕННЫЕ */
+        .modal-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a237e, #283593);
+            padding: 25px; /* Уменьшили padding */
+            border-radius: 20px; /* Уменьшили радиус */
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+            z-index: 1001;
+            min-width: 350px; /* Уменьшили минимальную ширину */
+            max-width: 450px; /* Уменьшили максимальную ширину */
+            border: 2px solid #FFD700; /* Уменьшили границу */
+            color: white;
+            backdrop-filter: blur(8px);
+        }
+        
+        .modal-content {
+            text-align: center;
+        }
+        
+        .modal-content h2 {
+            color: #FFD700;
+            margin-bottom: 20px; /* Уменьшили отступ */
+            font-size: 1.5em; /* Уменьшили размер */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .modal-content p {
+            font-size: 1em; /* Уменьшили размер */
+            line-height: 1.4;
+            color: #E3F2FD;
+            margin-bottom: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Уменьшили отступы */
+            margin-top: 20px; /* Уменьшили отступ */
+        }
+        
+        .modal-btn {
+            padding: 12px; /* Уменьшили padding */
+            border-radius: 25px; /* Уменьшили радиус */
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em; /* Уменьшили размер */
+            text-align: center;
+        }
+        
+        .login-modal-btn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        }
+        
+        .login-modal-btn:hover {
+            background: linear-gradient(135deg, #45a049, #1B5E20);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .register-modal-btn {
+            background: linear-gradient(135deg, #2196F3, #1565C0);
+        }
+        
+        .register-modal-btn:hover {
+            background: linear-gradient(135deg, #1976D2, #0D47A1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        .cancel-btn {
+            background: linear-gradient(135deg, #757575, #424242);
+        }
+        
+        .cancel-btn:hover {
+            background: linear-gradient(135deg, #616161, #212121);
+            transform: translateY(-2px);
         }
         
         .message-container {
@@ -142,72 +466,122 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #2c3e50, #4a6491);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #1a237e, #283593);
+            padding: 30px; /* Уменьшили padding */
+            border-radius: 20px; /* Уменьшили радиус */
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.7);
             z-index: 1000;
-            min-width: 400px;
-            max-width: 600px;
-            border: 3px solid #FFD700;
+            min-width: 380px; /* Уменьшили минимальную ширину */
+            max-width: 550px; /* Уменьшили максимальную ширину */
+            border: 2px solid #FFD700; /* Уменьшили границу */
             color: white;
+            backdrop-filter: blur(12px);
         }
         
         .message-content {
             text-align: center;
         }
         
+        .message-content h2 {
+            color: #FFD700;
+            margin-bottom: 20px; /* Уменьшили отступ */
+            font-size: 1.8em; /* Уменьшили размер */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        
+        #congrat-text {
+            font-size: 1.1em; /* Уменьшили размер */
+            line-height: 1.5;
+            color: #E3F2FD;
+            margin: 15px 0; /* Уменьшили отступы */
+            padding: 12px; /* Уменьшили padding */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px; /* Уменьшили радиус */
+            border-left: 3px solid #FFD700; /* Уменьшили границу */
+        }
+        
         .close-btn {
             position: absolute;
-            top: 10px;
+            top: 10px; /* Уменьшили отступ */
             right: 15px;
             background: none;
             border: none;
             color: white;
-            font-size: 2em;
+            font-size: 1.8em; /* Уменьшили размер */
             cursor: pointer;
             line-height: 1;
+            transition: all 0.3s;
+            width: 35px; /* Уменьшили размер */
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
         }
         
         .close-btn:hover {
             color: #FFD700;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
         }
         
-        /* Снежинки */
+        /* СНЕЖИНКИ */
         .snowflake {
-            position: absolute;
+            position: fixed;
             background: white;
             border-radius: 50%;
-            opacity: 0.8;
+            opacity: 0;
             animation: fall linear infinite;
+            z-index: 1;
+            pointer-events: none;
         }
         
         @keyframes fall {
-            to {
-                transform: translateY(100vh);
+            0% {
+                transform: translateY(-100px) translateX(0px) rotate(0deg);
+                opacity: 0.8;
+            }
+            10% {
+                opacity: 0.9;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(calc(100vh + 100px)) translateX(20px) rotate(360deg);
+                opacity: 0;
             }
         }
         
         #gift-image {
-            border-radius: 10px;
-            border: 3px solid #FFD700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            padding: 10px;
+            border-radius: 12px; /* Уменьшили радиус */
+            border: 3px solid #FFD700; /* Уменьшили границу */
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            padding: 12px; /* Уменьшили padding */
             background: white;
+            max-width: 200px; /* Уменьшили максимальную ширину */
+            max-height: 200px; /* Уменьшили максимальную высоту */
+            margin: 15px auto; /* Уменьшили отступы */
         }
+        
     </style>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('boxes-container');
             const messageDiv = document.getElementById('message');
+            const authModal = document.getElementById('auth-modal');
             const giftImage = document.getElementById('gift-image');
             const congratText = document.getElementById('congrat-text');
             const openedCountSpan = document.getElementById('opened-count');
             const remainingSpan = document.getElementById('remaining');
             const resetBtn = document.getElementById('reset-btn');
+            const refillBtn = document.getElementById('refill-btn');
+            const premiumInfo = document.getElementById('premium-info');
             
-            // Создаем снежинки
+            let isAuthenticated = false;
+            
+            // УЛУЧШЕННЫЕ СНЕЖИНКИ - начнем падение за пределами экрана
             createSnowflakes();
             
             // Загружаем коробки
@@ -215,31 +589,63 @@
                 fetch('/lab9/get_boxes')
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Данные коробок:', data);
                         container.innerHTML = '';
+                        isAuthenticated = data.is_authenticated;
+                        
+                        // Показываем/скрываем информацию о премиальных подарках
+                        if (data.premium_count > 0 && !isAuthenticated) {
+                            premiumInfo.style.display = 'block';
+                        } else {
+                            premiumInfo.style.display = 'none';
+                        }
+                        
                         data.boxes.forEach(box => {
                             const boxDiv = document.createElement('div');
-                            boxDiv.className = 'gift-box' + (box.opened ? ' opened' : '');
+                            
+                            // Классы в зависимости от состояния
+                            let className = 'gift-box';
+                            if (box.opened) {
+                                className += ' opened';
+                            }
+                            if (box.is_locked) {
+                                className += ' locked';
+                            }
+                            boxDiv.className = className;
+                            
                             boxDiv.style.top = box.top + '%';
                             boxDiv.style.left = box.left + '%';
                             boxDiv.dataset.id = box.id;
                             boxDiv.dataset.congrat = box.congrat;
-                            boxDiv.dataset.gift = box.gift_image;  // путь к изображению подарка
+                            boxDiv.dataset.gift = box.gift_image;
+                            boxDiv.dataset.isPremium = box.is_premium;
+                            boxDiv.dataset.isAvailable = box.is_available;
+                            boxDiv.title = box.message || '';
                             
                             // Добавляем изображение подарка
                             const giftImg = document.createElement('img');
-                            giftImg.src = box.gift_image;  // используем ТО ЖЕ изображение что и для подарка
+                            giftImg.src = box.gift_image;
                             giftImg.alt = 'Подарок';
                             giftImg.className = 'gift-box-image';
                             
-                            // Уменьшаем непрозрачность для открытых коробок
-                            if (box.opened) {
-                                giftImg.style.opacity = '0.5';
+                            // Для заблокированных коробок добавляем затемнение (inline-стили)
+                            if (box.is_locked) {
+                                giftImg.style.opacity = '0.6';
+                                giftImg.style.filter = 'grayscale(50%) brightness(0.7)';
                             }
+                            
+                            // ВНИМАНИЕ: УБРАЛИ inline-стили для открытых коробок!
+                            // Теперь только класс .opened, CSS сам все сделает
                             
                             boxDiv.appendChild(giftImg);
                             
-                            if (!box.opened) {
+                            // Добавляем обработчик клика только для доступных коробок
+                            if (box.is_available && !box.opened) {
                                 boxDiv.addEventListener('click', openBox);
+                            } else if (box.is_locked) {
+                                boxDiv.addEventListener('click', function() {
+                                    showAuthModal();
+                                });
                             }
                             
                             container.appendChild(boxDiv);
@@ -254,6 +660,8 @@
                     });
             }
             
+                        // Функция открытия коробки
+                        // Функция открытия коробки
             // Функция открытия коробки
             function openBox(event) {
                 const boxId = event.currentTarget.dataset.id;
@@ -269,9 +677,13 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        showMessage(data.error, true);
+                        if (data.requires_auth) {
+                            showAuthModal();
+                        } else {
+                            showMessage(data.error, true);
+                        }
                     } else {
-                        // Показываем поздравление и тот же самый подарок в большем размере
+                        // Показываем поздравление и подарок
                         congratText.textContent = congrat;
                         giftImage.src = gift;
                         giftImage.style.display = 'block';
@@ -281,17 +693,10 @@
                         openedCountSpan.textContent = data.opened_count;
                         remainingSpan.textContent = data.remaining;
                         
-                        // Помечаем коробку как открытую
-                        const boxDiv = event.currentTarget;
-                        boxDiv.classList.add('opened');
+                        // ВАЖНО: Загружаем коробки заново, чтобы получить актуальное состояние
+                        loadBoxes();
                         
-                        // Делаем изображение бледным
-                        const giftImg = boxDiv.querySelector('img');
-                        if (giftImg) {
-                            giftImg.style.opacity = '0.5';
-                        }
-                        
-                        boxDiv.removeEventListener('click', openBox);
+                        showMessage('Вы открыли коробку!', false);
                     }
                 })
                 .catch(error => {
@@ -299,6 +704,18 @@
                     showMessage('Ошибка при открытии коробки', true);
                 });
             }
+                        
+            // Показать модальное окно авторизации
+            function showAuthModal() {
+                authModal.style.display = 'block';
+            }
+            
+            // Закрыть модальное окно авторизации
+            function closeAuthModal() {
+                authModal.style.display = 'none';
+            }
+            
+            window.closeAuthModal = closeAuthModal;
             
             // Функция показа сообщений
             function showMessage(text, isError) {
@@ -308,12 +725,14 @@
                 msgDiv.style.position = 'fixed';
                 msgDiv.style.top = '20px';
                 msgDiv.style.right = '20px';
-                msgDiv.style.padding = '10px 20px';
-                msgDiv.style.borderRadius = '5px';
+                msgDiv.style.padding = '12px 25px';
+                msgDiv.style.borderRadius = '8px';
                 msgDiv.style.color = 'white';
                 msgDiv.style.zIndex = '1000';
                 msgDiv.style.backgroundColor = isError ? '#ff4444' : '#44ff44';
-                msgDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+                msgDiv.style.boxShadow = '0 4px 15px rgba(0,0,0,0.4)';
+                msgDiv.style.fontSize = '1.1em';
+                msgDiv.style.fontWeight = '500';
                 
                 document.body.appendChild(msgDiv);
                 
@@ -342,6 +761,7 @@
                 .then(data => {
                     if (data.success) {
                         loadBoxes();
+                        showMessage('Игра сброшена! Все подарки обновлены.', false);
                         closeMessage();
                     }
                 })
@@ -351,20 +771,80 @@
                 });
             });
             
-            // Создание снежинок
+            // Кнопка "Дед Мороз" (только для авторизованных)
+            if (refillBtn) {
+                refillBtn.addEventListener('click', function() {
+                    if (!isAuthenticated) {
+                        showAuthModal();
+                        return;
+                    }
+                    
+                    fetch('/lab9/refill', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            showMessage(data.error, true);
+                        } else {
+                            showMessage('🎅 Дед Мороз наполнил все коробки заново!', false);
+                            // Перезагружаем коробки через секунду
+                            setTimeout(() => {
+                                loadBoxes();
+                            }, 1200);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка обновления коробок:', error);
+                        showMessage('Ошибка обновления коробок', true);
+                    });
+                });
+            }
+            
+            // УЛУЧШЕННОЕ СОЗДАНИЕ СНЕЖИНОК
             function createSnowflakes() {
-                const container = document.querySelector('body');
-                for (let i = 0; i < 50; i++) {
+                const snowflakeCount = 80; // Увеличим количество снежинок
+                
+                for (let i = 0; i < snowflakeCount; i++) {
                     const snowflake = document.createElement('div');
                     snowflake.className = 'snowflake';
-                    const size = Math.random() * 10 + 5;
+                    
+                    // Случайный размер от 4 до 12px
+                    const size = Math.random() * 8 + 4;
                     snowflake.style.width = size + 'px';
                     snowflake.style.height = size + 'px';
+                    
+                    // Прозрачность
+                    const opacity = Math.random() * 0.7 + 0.3;
+                    snowflake.style.opacity = '0';
+                    
+                    // Начинаем за пределами экрана (сверху) и падаем до самого низа + запас
                     snowflake.style.left = Math.random() * 100 + 'vw';
-                    snowflake.style.opacity = Math.random() * 0.5 + 0.3;
-                    snowflake.style.animationDuration = Math.random() * 5 + 5 + 's';
-                    snowflake.style.animationDelay = Math.random() * 5 + 's';
-                    container.appendChild(snowflake);
+                    
+                    // Анимация - начинаем за пределами экрана (-100px) и заканчиваем за пределами (+100px)
+                    const duration = Math.random() * 10 + 10; // 10-20 секунд
+                    const delay = Math.random() * 5; // Задержка до 5 секунд
+                    
+                    snowflake.style.animationDuration = duration + 's';
+                    snowflake.style.animationDelay = delay + 's';
+                    
+                    // Разные формы снежинок
+                    if (Math.random() > 0.5) {
+                        snowflake.style.borderRadius = '50%';
+                    } else {
+                        snowflake.style.borderRadius = '0%';
+                        snowflake.style.transform = 'rotate(45deg)';
+                    }
+                    
+                    // Разные оттенки белого
+                    const brightness = Math.random() * 0.3 + 0.7;
+                    snowflake.style.backgroundColor = `rgba(255, 255, 255, ${opacity})`;
+                    snowflake.style.filter = `brightness(${brightness})`;
+                    
+                    document.body.appendChild(snowflake);
                 }
             }
             
