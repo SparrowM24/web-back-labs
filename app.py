@@ -16,6 +16,7 @@ from lab5 import lab5
 from lab6 import lab6_bp
 from lab7 import lab7
 from lab8 import lab8_bp
+from lab9 import lab9
 
 
 app = Flask(__name__)
@@ -69,6 +70,7 @@ app.register_blueprint(lab5)
 app.register_blueprint(lab6_bp)
 app.register_blueprint(lab7)
 app.register_blueprint(lab8_bp)
+app.register_blueprint(lab9)
 
 log = []
 @app.errorhandler(404)
@@ -126,6 +128,7 @@ def index():
         <a href="/lab6">Шестая лабораторная</a> <br>
         <a href="/lab7">Седьмая лабораторная</a> <br>
         <a href="/lab8">Восьмая лабораторная</a> <br>
+        <a href="/lab8">Девятая лабораторная</a> <br>
         <footer>
             Дьячкова Алиса Дмитриевна ФБИ-32 3 Курс 2025
         </footer>
